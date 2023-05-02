@@ -7,7 +7,27 @@ Required components:
 * clone this repository and either edit the example 'people.txt' file or create a new file
 * run hylat
 
-Scipt usage:
+Example usage:
+```
+% ./hylat.py --size 3 -v people.txt
+~~~~ Plan ~~~~
+team sizes of exactly 3
+family memebers kept apart
+parents and kids mixed
+
+~~~~ Processing ~~~~
+11 kids and 7 parents
+
+~~~~ Results (6 teams)~~~~
+Olivia Randall - Gordon Wallace - Craig Manning
+Felicity Allan - Hennry Manning - Luke
+Eric Peters - Kid Gray - Parker Randall
+Ava Peters - Brother Peake - Hills Wallace
+Parent Gray - James Freeman - Samantha Peake
+Jack Manning - Weston Peters - Matthew Randall
+```
+
+Script usage:
 ```
 usage: hylat.py [-h] [-o] [-g] [-s SIZE] [-t TRIES] [-u] [-v] [-j] [-p SEPARATOR] family_file
 
