@@ -34,7 +34,7 @@ class Args:
         self.size = 2
         self.tries = 10000
         self.inexact = False
-        self.verbose = False
+        self.verbose = 0
         self.json = False
         self.separator = ' - '
 
@@ -54,7 +54,8 @@ def results_helper_json(args, results, members_start_with):
     assert team_count == len(members_per_team)
 
     for l, members in enumerate(json_results):
-        check_members(args, members, members_per_team[l], members_start_with[l])
+        assert len(members) == members_per_team[l]
+        check_members(args, members, members_start_with[l])
 
 
 def results_helper_text(args, results, members_start_with):
@@ -65,11 +66,11 @@ def results_helper_text(args, results, members_start_with):
 
     for l, line in enumerate(team_lines):
         members = line.split(args.separator)
-        check_members(args, members, members_per_team[l], members_start_with[l])
+        assert len(members) == members_per_team[l]
+        check_members(args, members, members_start_with[l])
 
 
-def check_members(args, members, members_per_team, members_start_with):
-    assert len(members) == members_per_team
+def check_members(args, members, members_start_with):
     split_members = [m.strip().split('_') for m in members]
     fams = np.take(split_members, 2, 1)
     print(fams)
