@@ -15,7 +15,7 @@ team sizes of exactly 3
 family memebers kept apart
 parents and kids mixed
 
-~~~~ Processing ~~~~
+~~~~ Distributing ~~~~
 11 kids and 7 parents
 
 ~~~~ Results (6 teams)~~~~
