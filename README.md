@@ -5,7 +5,7 @@ Required components:
 * python3 installed locally
 * numpy package installed
 * clone this repository 
-* either edit the example 'people.txt' file or create a new file
+* edit the example 'people.txt' file or create a new file
 * run hylat
 
 Example usage:

@@ -47,11 +47,12 @@ def make_teams(args, lines):
             pstr, kstr = family.split(':')
             pstr = pstr.strip()
             if pstr:
-                ptuples = zip([s.strip() for s in pstr.split(',')], (i for _ in range(999)))
+                # (i for _ in iter(int, 1)) is a clever generator that returns i forever
+                ptuples = zip([s.strip() for s in pstr.split(',')], (i for _ in iter(int, 1)))
                 parents.extend(ptuples)
             kstr = kstr.strip()
             if kstr:
-                ktuples = zip([s.strip() for s in kstr.split(',')], (i for _ in range(999)))
+                ktuples = zip([s.strip() for s in kstr.split(',')], (i for _ in iter(int, 1)))
                 kids.extend(ktuples)
     except Exception as ex:
         usage_error(f'could not read family data. {ex}')
@@ -78,7 +79,7 @@ def make_teams(args, lines):
     count = 0
     teams = []
 
-    # need to make this better than brute force since this can loop forever
+    # need to make this better than brute force someday
     while retry:
         teams = []
         shuffle(parents)
