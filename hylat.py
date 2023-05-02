@@ -47,12 +47,12 @@ def make_teams(args, lines):
             pstr, kstr = family.split(':')
             pstr = pstr.strip()
             if pstr:
-                # (i for _ in iter(int, 1)) is a clever generator that returns i forever
-                ptuples = zip([s.strip() for s in pstr.split(',')], (i for _ in iter(int, 1)))
+                # iter(lambda:i, -1) is an iterator that returns i forever when i > 0
+                ptuples = zip([s.strip() for s in pstr.split(',')], iter(lambda:i, -1))
                 parents.extend(ptuples)
             kstr = kstr.strip()
             if kstr:
-                ktuples = zip([s.strip() for s in kstr.split(',')], (i for _ in iter(int, 1)))
+                ktuples = zip([s.strip() for s in kstr.split(',')], iter(lambda:i, -1))
                 kids.extend(ktuples)
     except Exception as ex:
         usage_error(f'could not read family data. {ex}')
