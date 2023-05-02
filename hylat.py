@@ -1,4 +1,25 @@
 #! /usr/bin/env python3
+""" MIT License
+
+Copyright (c) 2023 Brad Schick
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE. """
 
 import sys
 import argparse
@@ -48,13 +69,14 @@ def make_teams(args, lines):
     num_teams = (kid_count + parent_count) // args.size
 
     if (kid_count + parent_count) != num_teams * args.size:
-        if not args.uneven:
+        if not args.inexact:
             usage_error(f"cannot create teams of {args.size} with {kid_count + parent_count} people, consider using -u option")
         else:
             num_teams += 1
 
     retry = True
     count = 0
+    teams = []
 
     # need to make this better than brute force since this can loop forever
     while retry:
@@ -63,7 +85,7 @@ def make_teams(args, lines):
         shuffle(kids)
 
         if args.generations:
-            # put kids first so parent teams are smaller when uneven (due to how np.array_split works)
+            # put kids first so parent teams are smaller when inexact (due to how np.array_split works)
             merged = kids + parents
             teams = np.array_split(merged, num_teams)
         else:
@@ -111,7 +133,7 @@ def usage_error(msg):
 
 def dump_plan(args):
     print(f'~~~~ Plan ~~~~')
-    size_msg = "approximately" if args.uneven else "exactly"
+    size_msg = "approximately" if args.inexact else "exactly"
     print(f'team sizes of {size_msg} {args.size:,}')
 
     together_msg = "allowed together" if args.oktogether else "kept apart"
@@ -136,9 +158,9 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='do not force family members to be on different teams')
     parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams of the same generation (parents v kids)')
     parser.add_argument('-s', '--size', required=False, default=2, type=int, help='team size (default is 2)')
-    parser.add_argument('-t', '--tries', required=False, default=10000, type=int, help='maximum number of attempts to create valid teams before giving up (default is 10,000)')
-    parser.add_argument('-u', '--uneven', required=False, action='store_true', help='try to match team sizes, but allow smaller teams or uneven teams')
-    parser.add_argument('-v', '--verbose', action="count", help='display more progress information')
+    parser.add_argument('-t', '--tries', required=False, default=10000, type=int, help='maximum number of attempts to create valid teams (default is 10,000)')
+    parser.add_argument('-i', '--inexact', required=False, action='store_true', help='try to match team size, but allow smaller or uneven team sizes')
+    parser.add_argument('-v', '--verbose', action="count", default=0, help='display more progress information')
     parser.add_argument('-j', '--json', action='store_true', help='output in json')
     parser.add_argument('-p', '--separator', required=False, help="separator between team members in printout (default is ' - ')")
     args = parser.parse_args()
@@ -158,6 +180,6 @@ if __name__ == "__main__":
                 sys.exit(1)
         print(result)
     except Exception as ex:
-#        traceback.print_exc(ex)
-        print(f'could not open or load {sys.argv[1]}. {ex}')
+#        traceback.print_exc()
+        print(f'could not open or load "{args.family_file}". {ex}')
         sys.exit(2)

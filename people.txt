@@ -1,18 +1,17 @@
 # One family per line with a format of:
 #   parent [, parent] : kid [, kid]
 # Parent or kid list can be empty (both could be empty, but why?)
-# # as first character means the line is ignored
 #
 # Instead of "parents" and "kids", you can use whatever categories
 # you want. For example, each line could be a school class including
 # "Teachers: Students" or ":Students" that you want on different teams 
 #
-# Example list below (names from https://homepage.net/name_generator/)
+# Example families list below (names from https://homepage.net/name_generator/)
 
 Gordon Wallace: Hills Wallace
 Ava Peters, Eric Peters : Weston Peters
-Jack Manning: Craig Manning, Hennry Manning
-: Samantha Peake, Brother Peake
+Jack Manning: Craig Manning, Sara Manning
+: Samantha Peake, Sister Peake
 : Luke
 : James Freeman
 Felicity Allan:

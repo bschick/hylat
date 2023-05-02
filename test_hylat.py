@@ -1,4 +1,26 @@
 #! /usr/bin/env python3
+""" MIT License
+
+Copyright (c) 2023 Brad Schick
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE. """
+
 import hylat
 import pytest
 import json
@@ -11,7 +33,7 @@ class Args:
         self.generations = False
         self.size = 2
         self.tries = 10000
-        self.uneven = False
+        self.inexact = False
         self.verbose = False
         self.json = False
         self.separator = ' - '
@@ -115,13 +137,13 @@ def test_fail_size_too_big():
             results = hylat.make_teams(args, people.readlines())
 
 
-def test_size6_gen_oktogether_uneven():
+def test_size6_gen_oktogether_inexact():
     # this one can take 100+ tries
     args = Args()
     args.size = 6
     args.oktogether = True
     args.generations = True
-    args.uneven = True # should do nothing in this test
+    args.inexact = True # should do nothing in this test
 
     with open('test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
@@ -131,7 +153,7 @@ def test_size6_gen_oktogether_uneven():
     members_start_with += [['Parent', 'Parent', 'Parent', 'Parent', 'Parent', 'Parent'] for _ in range(1)]
     results_helper(args, results, members_start_with)
 
-    args.uneven = False # should do nothing in this test
+    args.inexact = False # should do nothing in this test
     with open('test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -175,10 +197,10 @@ def test_pvk():
     results_helper(args, results, members_start_with)
 
 
-def test_uneven():
+def test_inexact():
     args = Args()
     args.size = 4
-    args.uneven = True
+    args.inexact = True
 
     # test2 cannot produce teams of 2 without oktogether
     with open('test1.txt', 'r') as people:

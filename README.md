@@ -29,7 +29,7 @@ Jack Manning - Weston Peters - Matthew Randall
 
 Script usage:
 ```
-usage: hylat.py [-h] [-o] [-g] [-s SIZE] [-t TRIES] [-u] [-v] [-j] [-p SEPARATOR] family_file
+usage: hylat.py [-h] [-o] [-g] [-s SIZE] [-t TRIES] [-i] [-v] [-j] [-p SEPARATOR] family_file
 
 Create teams from a file listing families of parents and kids (or other people groupings)
 
@@ -42,9 +42,9 @@ optional arguments:
   -g, --generations     try to create teams of the same generation (parents v kids)
   -s SIZE, --size SIZE  team size (default is 2)
   -t TRIES, --tries TRIES
-                        maximum number of attempts to create valid teams before giving up (default is 10,000)
-  -u, --uneven          try to match team sizes, but allow smaller teams or uneven teams
-  -v, --verbose         display progress information
+                        maximum number of attempts to create valid teams (default is 10,000)
+  -i, --inexact         try to match team size, but allow smaller or uneven team sizes
+  -v, --verbose         display more progress information
   -j, --json            output in json
   -p SEPARATOR, --separator SEPARATOR
                         separator between team members in printout (default is ' - ')
