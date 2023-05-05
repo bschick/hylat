@@ -85,7 +85,7 @@ def check_members(args, members, members_start_with):
 def test_default():
     args = Args()
 
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Kid'] for _ in range(7)]
@@ -97,7 +97,7 @@ def test_default_json():
     args = Args()
     args.json = True
 
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Kid'] for _ in range(7)]
@@ -109,7 +109,7 @@ def test_size3():
     args = Args()
     args.size = 3
 
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Parent', 'Kid'] for _ in range(1)]
@@ -122,7 +122,7 @@ def test_size6_json():
     args.size = 6
     args.json = True
 
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
@@ -133,7 +133,7 @@ def test_fail_size_too_big():
     args = Args()
     args.size = 12
 
-    with open('test2.txt', 'r') as people:
+    with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
 
@@ -146,7 +146,7 @@ def test_size6_gen_oktogether_inexact():
     args.generations = True
     args.inexact = True # should do nothing in this test
 
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Kid', 'Kid', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
@@ -155,7 +155,7 @@ def test_size6_gen_oktogether_inexact():
     results_helper(args, results, members_start_with)
 
     args.inexact = False # should do nothing in this test
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     results_helper(args, results, members_start_with)
@@ -166,7 +166,7 @@ def test_oktogether():
     args.oktogether = True
 
     # test2 cannot produce teams of 2 without oktogether
-    with open('test2.txt', 'r') as people:
+    with open('good_test2.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Kid'] for _ in range(3)]
@@ -179,7 +179,7 @@ def test_fail_not_oktogether():
     args.tries = 1000
 
     # test2 cannot produce teams of 2 without oktogether
-    with open('test2.txt', 'r') as people:
+    with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
 
@@ -189,7 +189,7 @@ def test_pvk():
     args.generations = True
 
     # test2 cannot produce teams of 2 without oktogether
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Kid', 'Kid'] for _ in range(5)]
@@ -204,7 +204,7 @@ def test_inexact():
     args.inexact = True
 
     # test2 cannot produce teams of 2 without oktogether
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(2)]
@@ -217,6 +217,31 @@ def test_fail_noteven():
     args = Args()
     args.size = 4
 
-    with open('test1.txt', 'r') as people:
+    with open('good_test1.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
+
+
+def test_fail_input():
+    for fname in ('bad_test3.txt', 'bad_test4.txt'):
+        do_fail_input(fname)
+
+
+def do_fail_input(file_name):
+    args = Args()
+    args.inexact = True
+    args.oktogether = True
+
+    with open(file_name, 'r') as people:
+        with pytest.raises(ValueError):
+            results = hylat.make_teams(args, people.readlines())
+
+
+def test_fail_binary():
+    args = Args()
+    args.inexact = True
+    args.oktogether = True
+
+    with open('bad_test5.txt', 'rb') as people:
+        with pytest.raises(ValueError):
+            results = hylat.make_teams(args, people.read())

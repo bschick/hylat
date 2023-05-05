@@ -40,11 +40,17 @@ def make_teams(args, lines):
 
     try:
         for i, family in enumerate(lines):
+            if not isinstance(family, str):
+                raise ValueError('Contains unreadable characters')
             family = family.strip()
             if len(family) < 2 or family[0] == '#':
                 continue
 
-            pstr, kstr = family.split(':')
+            try:
+                pstr, kstr = family.split(':')
+            except:
+                raise ValueError(f'Line {i+1} has {family.count(":")} ":" separators, each line must have one')
+
             pstr = pstr.strip()
             if pstr:
                 # iter(lambda:i, -1) is an iterator that returns i forever when i > 0
@@ -54,8 +60,10 @@ def make_teams(args, lines):
             if kstr:
                 ktuples = zip([s.strip() for s in kstr.split(',')], iter(lambda:i, -1))
                 kids.extend(ktuples)
+    except ValueError as verr:
+        usage_error(f'Could not read family data. {verr}')
     except Exception as ex:
-        usage_error(f'could not read family data. {ex}')
+        usage_error(f'Could not read family data.')
 
 
     kid_count = len(kids)
@@ -65,13 +73,13 @@ def make_teams(args, lines):
         print(f'{kid_count} kids and {parent_count} parents')
 
     if kid_count + parent_count < args.size:
-        usage_error(f'team size of {args.size} is larger than the total number of people, which is {kid_count + parent_count}')
+        usage_error(f'Team size of {args.size} is larger than the total number of people, which is {kid_count + parent_count}')
 
     num_teams = (kid_count + parent_count) // args.size
 
     if (kid_count + parent_count) != num_teams * args.size:
         if not args.inexact:
-            usage_error(f"cannot create teams of {args.size} with {kid_count + parent_count} people, consider using -u option")
+            usage_error(f"Cannot create teams of {args.size} with {kid_count + parent_count} people, consider using -u option")
         else:
             num_teams += 1
 
@@ -108,7 +116,7 @@ def make_teams(args, lines):
                     break
         
         if count == args.tries:
-            usage_error(f'did not create valid teams in {count:,} attempts, consider using -o or -t options')
+            usage_error(f'Did not create valid teams in {count:,} attempts, consider using -o or -t options')
 
 
     if args.verbose:
@@ -167,7 +175,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.json and args.separator is not None:
-        usage_error('cannot specify seperator for json output')
+        usage_error('Cannot specify seperator for json output')
 
     if args.separator is None:
         args.separator = ' - '
@@ -176,11 +184,15 @@ if __name__ == "__main__":
         with open(args.family_file, 'r') as people:
             try:
                 result = make_teams(args, people.readlines())
+                print(result)
+            except UnicodeDecodeError as uerr:
+                print(f'Could not open or load. Contains unreadable characters\n  hylat.py -h for help')
+                sys.exit(1)
             except ValueError as verr:
+#                traceback.print_exc()
                 print(f'{str(verr)}\n  hylat.py -h for help')
                 sys.exit(1)
-        print(result)
     except Exception as ex:
 #        traceback.print_exc()
-        print(f'could not open or load "{args.family_file}". {ex}')
+        print(f'Could not open or load "{args.family_file}". {ex}')
         sys.exit(2)
