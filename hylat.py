@@ -54,11 +54,11 @@ def make_teams(args, lines):
             pstr = pstr.strip()
             if pstr:
                 # iter(lambda:i, -1) is an iterator that returns i forever when i > 0
-                ptuples = zip([s.strip() for s in pstr.split(',')], iter(lambda:i, -1))
+                ptuples = zip([s.strip() for s in pstr.split(',') if s.strip()], iter(lambda:i, -1))
                 parents.extend(ptuples)
             kstr = kstr.strip()
             if kstr:
-                ktuples = zip([s.strip() for s in kstr.split(',')], iter(lambda:i, -1))
+                ktuples = zip([s.strip() for s in kstr.split(',') if s.strip()], iter(lambda:i, -1))
                 kids.extend(ktuples)
     except ValueError as verr:
         usage_error(f'Could not read family data. {verr}')
@@ -164,7 +164,7 @@ def dump_plan(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create teams from a file listing families of parents and kids (or other people groupings)')
     parser.add_argument('family_file', type=str, help='file containing list of families')
-    parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='do not force family members to be on different teams')
+    parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='allow familes to be on the same team')
     parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams of the same generation (parents v kids)')
     parser.add_argument('-s', '--size', required=False, default=2, type=int, help='team size (default is 2)')
     parser.add_argument('-t', '--tries', required=False, default=10000, type=int, help='maximum number of attempts to create valid teams (default is 10,000)')
@@ -186,7 +186,7 @@ if __name__ == "__main__":
                 result = make_teams(args, people.readlines())
                 print(result)
             except UnicodeDecodeError as uerr:
-                print(f'Could not open or load. Contains unreadable characters\n  hylat.py -h for help')
+                print(f'Could not read "{args.family_file}". Contains unreadable characters\n  hylat.py -h for help')
                 sys.exit(1)
             except ValueError as verr:
 #                traceback.print_exc()

@@ -76,10 +76,10 @@ def check_members(args, members, members_start_with):
     print(fams)
 
     if not args.oktogether:
-        assert len(np.unique(fams, return_counts=True)[1]) == len(members), "number of uniques families is < number of members"
+        assert len(np.unique(fams, return_counts=True)[1]) == len(members), "family members are together on the same team"
 
     for m, start in enumerate(members_start_with):
-        assert members[m].startswith(start)
+        assert members[m].startswith(start), "unexpected parent or kid on team"
 
 
 def test_default():

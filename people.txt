@@ -1,10 +1,15 @@
-# One family per line with a format of:
-#   parent [, parent] : kid [, kid]
-# Parent or kid list can be empty (both could be empty, but why?)
+# Enter one family per line with a format of:
+#   ParentList : KidList 
 #
-# Instead of "parents" and "kids", you can use whatever categories
-# you want. For example, each line could be a school class including
-# "Teachers: Students" or ":Students" that you want on different teams 
+# Where ParentList and KidList are comma seperated names. For example, a family line could be:
+#   Ava Peters, Eric Peters : Weston Peters
+#
+# The ParentList or KidList on each line can be empty, but the line must still have a : separator.
+# An example with kids but no parents:
+#   : Samantha Peake, Sister Peake
+#
+# Rather than "parents" and "kids", you can use whatever categories you want. For example, each
+# line could be a school class including "Teachers: Students" that you want on different teams
 #
 # Example families list below (names from https://homepage.net/name_generator/)
 
