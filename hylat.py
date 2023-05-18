@@ -263,12 +263,12 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--teamsize', required=False, default=-999, type=int, help='size of each team, must be more than 1 (default is 2)')
     parser.add_argument('-c', '--teamcount', required=False, default=-999, type=int, help='number of teams, must be more than 1')
     parser.add_argument('-t', '--tries', required=False, default=10000, type=int, help='maximum number of attempts to create valid teams (default is 10,000)')
-    parser.add_argument('-u', '--uneven', required=False, action='store_true', help='try to match team size, but allow uneven team sizes')
-    parser.add_argument('-v', '--verbose', action="count", default=0, help='display more progress information')
-    parser.add_argument('-j', '--json', action='store_true', default=False, help='output in json')
     parser.add_argument('-d', '--drop', action='store_true', default=False, help='drop random extra people if teams are not even')
+    parser.add_argument('-u', '--uneven', required=False, action='store_true', help='try to match team size, but allow uneven team sizes')
+    parser.add_argument('-j', '--json', action='store_true', default=False, help='output in json')
     parser.add_argument('-r', '--round', default='closest', type=str, choices=['closest','down','up'], help='used with --uneven and --teamsize to round resulting number of teams down, up, or to closest even number (default is \'closest\')')
     parser.add_argument('-p', '--separator', required=False, help="separator between team members in printout (default is ' - ')")
+    parser.add_argument('-v', '--verbose', action="count", default=0, help='display more progress information')
     args = parser.parse_args()
 
     try:
