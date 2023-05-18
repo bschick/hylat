@@ -31,12 +31,15 @@ class Args:
     def __init__(self):
         self.oktogether = False
         self.generations = False
-        self.size = 2
+        self.teamsize = -999
+        self.teamcount = -999
         self.tries = 10000
-        self.inexact = False
+        self.uneven = False
+        self.drop = False
+        self.round = 'closest'
         self.verbose = 0
         self.json = False
-        self.separator = ' - '
+        self.separator = None
 
 
 def results_helper(args, results, members_start_with):
@@ -79,12 +82,15 @@ def check_members(args, members, members_start_with):
         assert len(np.unique(fams, return_counts=True)[1]) == len(members), "family members are together on the same team"
 
     for m, start in enumerate(members_start_with):
-        assert members[m].startswith(start), "unexpected parent or kid on team"
+        if start != '*':
+            assert members[m].startswith(start), "unexpected parent or kid on team"
 
 
 def test_default():
     args = Args()
+    args.teamsize = 2
 
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -95,8 +101,34 @@ def test_default():
 
 def test_default_json():
     args = Args()
+    args.teamsize = 2
     args.json = True
 
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Parent', 'Kid'] for _ in range(7)]
+    members_start_with += [['Kid', 'Kid'] for _ in range(2)]
+    results_helper(args, results, members_start_with)
+
+def test_teamcount3():
+    args = Args()
+    args.teamcount = 3
+
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Parent', 'Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+    results_helper(args, results, members_start_with)
+
+def test_teamcount9():
+    args = Args()
+    args.teamcount = 9
+
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -105,10 +137,11 @@ def test_default_json():
     results_helper(args, results, members_start_with)
 
 
-def test_size3():
+def test_teamsize3():
     args = Args()
-    args.size = 3
+    args.teamsize = 3
 
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -116,12 +149,13 @@ def test_size3():
     members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(5)]
     results_helper(args, results, members_start_with)
 
-def test_size6_json():
+def test_teamsize6_json():
     # this one can take 100+ tries
     args = Args()
-    args.size = 6
+    args.teamsize = 6
     args.json = True
 
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -129,23 +163,49 @@ def test_size6_json():
     members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
     results_helper(args, results, members_start_with)
 
-def test_fail_size_too_big():
+def test_fail_teamsize_too_big():
     args = Args()
-    args.size = 12
+    args.teamsize = 12
+    args.oktogether = True
 
+    hylat.normalize_args(args)
+    with open('good_test2.txt', 'r') as people:
+        with pytest.raises(ValueError):
+            results = hylat.make_teams(args, people.readlines())
+
+def test_fail_teamsize_too_big2():
+    args = Args()
+    args.teamsize = 7
+    args.oktogether = True
+    args.uneven = True
+
+    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
 
 
-def test_size6_gen_oktogether_inexact():
+def test_fail_teamcount_too_big():
+    args = Args()
+    args.teamcount = 7
+    args.oktogether = True
+    args.drop = True
+
+    hylat.normalize_args(args)
+    with open('good_test2.txt', 'r') as people:
+        with pytest.raises(ValueError):
+            results = hylat.make_teams(args, people.readlines())
+
+
+def test_teamsize6_gen_oktogether_uneven():
     # this one can take 100+ tries
     args = Args()
-    args.size = 6
+    args.teamsize = 6
     args.oktogether = True
     args.generations = True
-    args.inexact = True # should do nothing in this test
+    args.uneven = True # should do nothing in this test
 
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -154,7 +214,12 @@ def test_size6_gen_oktogether_inexact():
     members_start_with += [['Parent', 'Parent', 'Parent', 'Parent', 'Parent', 'Parent'] for _ in range(1)]
     results_helper(args, results, members_start_with)
 
-    args.inexact = False # should do nothing in this test
+    args = Args()
+    args.teamsize = 6
+    args.oktogether = True
+    args.generations = True
+    args.uneven = False # should do nothing in this test
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -163,22 +228,53 @@ def test_size6_gen_oktogether_inexact():
 
 def test_oktogether():
     args = Args()
+    args.teamsize = 2
     args.oktogether = True
 
     # test2 cannot produce teams of 2 without oktogether
+    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
     members_start_with = [['Parent', 'Kid'] for _ in range(3)]
     results_helper(args, results, members_start_with)
 
+def test_oktogether_teamcount():
+    args = Args()
+    args.teamcount = 3
+    args.oktogether = True
+
+    # test2 cannot produce teams of 2 without oktogether
+    hylat.normalize_args(args)
+    with open('good_test2.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Parent', 'Kid'] for _ in range(3)]
+    results_helper(args, results, members_start_with)
+
+def test_oktogether_teamcount6():
+    args = Args()
+    args.teamcount = 6
+    args.oktogether = True
+
+    # test2 cannot produce teams of 2 without oktogether
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Parent', 'Parent', 'Kid'] for _ in range(1)]
+    members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(5)]
+    results_helper(args, results, members_start_with)
+
 
 def test_fail_not_oktogether():
     args = Args()
+    args.teamsize = 2
     args.oktogether = False
     args.tries = 1000
 
     # test2 cannot produce teams of 2 without oktogether
+    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
@@ -186,9 +282,11 @@ def test_fail_not_oktogether():
 
 def test_pvk():
     args = Args()
+    args.teamsize = 2
     args.generations = True
 
     # test2 cannot produce teams of 2 without oktogether
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -198,12 +296,27 @@ def test_pvk():
     results_helper(args, results, members_start_with)
 
 
-def test_inexact():
-    args = Args()
-    args.size = 4
-    args.inexact = True
+def test_uneven1():
+    for r in ['closest', 'down']:
+        args = Args()
+        args.teamsize = 4
+        args.uneven = True
 
-    # test2 cannot produce teams of 2 without oktogether
+        args.round = r
+        hylat.normalize_args(args)
+        with open('good_test1.txt', 'r') as people:
+            results = hylat.make_teams(args, people.readlines())
+
+        members_start_with = [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(1)]
+        members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+        members_start_with += [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+        results_helper(args, results, members_start_with)
+
+    args = Args()
+    args.teamsize = 4
+    args.uneven = True
+    args.round = 'up'
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.make_teams(args, people.readlines())
 
@@ -212,26 +325,70 @@ def test_inexact():
     members_start_with += [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with)
 
+def test_uneven2():
+    args = Args()
+    args.teamsize = 4
+    args.uneven = True
+    args.round = 'up'
+
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with += [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    results_helper(args, results, members_start_with)
+
+def test_drop():
+    args = Args()
+    args.teamsize = 4
+    args.drop = True
+    
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    # since drops are random, cannot predict exect output
+    members_start_with = [['*', '*', '*', '*'] for _ in range(4)]
+    results_helper(args, results, members_start_with)
+
+
+def test_drop_teamcount():
+    args = Args()
+    args.teamcount = 4
+    args.drop = True
+
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    # since drops are random, cannot predict exect output
+    members_start_with = [['*', '*', '*', '*'] for _ in range(4)]
+    results_helper(args, results, members_start_with)
 
 def test_fail_noteven():
     args = Args()
-    args.size = 4
+    args.teamsize = 4
 
+    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
 
 
 def test_fail_input():
-    for fname in ('bad_test3.txt', 'bad_test4.txt'):
+    for fname in ('bad_test3.txt', 'bad_test4.txt', 'bad_test6.txt'):
         do_fail_input(fname)
 
 
 def do_fail_input(file_name):
     args = Args()
-    args.inexact = True
+    args.teamsize = 2
+    args.uneven = True
     args.oktogether = True
 
+    hylat.normalize_args(args)
     with open(file_name, 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.readlines())
@@ -239,9 +396,11 @@ def do_fail_input(file_name):
 
 def test_fail_binary():
     args = Args()
-    args.inexact = True
+    args.teamsize = 2
+    args.uneven = True
     args.oktogether = True
 
+    hylat.normalize_args(args)
     with open('bad_test5.txt', 'rb') as people:
         with pytest.raises(ValueError):
             results = hylat.make_teams(args, people.read())

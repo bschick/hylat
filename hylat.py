@@ -26,10 +26,15 @@ import argparse
 import json
 import numpy as np
 import traceback
-from random import shuffle
+from random import shuffle, randrange
+from math import floor, ceil
 
 
+# normalize_args function must be called first
 def make_teams(args, lines):
+
+    assert args.teamsize >= 0
+    assert args.teamcount >= 0
 
     if args.verbose:
         dump_plan(args)
@@ -37,6 +42,13 @@ def make_teams(args, lines):
 
     parents = []
     kids = []
+
+    if args.round == 'closest':
+        rounder = round
+    elif args.round == 'down':
+        rounder = floor
+    else:
+        rounder = ceil
 
     try:
         for i, family in enumerate(lines):
@@ -68,20 +80,66 @@ def make_teams(args, lines):
 
     kid_count = len(kids)
     parent_count = len(parents)
+    people_count = kid_count + parent_count
 
     if args.verbose:
-        print(f'{kid_count} kids and {parent_count} parents')
+        print(f'{people_count} people: {kid_count} kids and {parent_count} parents')
 
-    if kid_count + parent_count < args.size:
-        usage_error(f'Team size of {args.size} is larger than the total number of people, which is {kid_count + parent_count}')
+   # common error checking
+    if args.teamsize > 0 and args.teamsize > people_count:
+        usage_error(f'Team size of {args.teamsize} is larger than the total number of people, which is {people_count}')
 
-    num_teams = (kid_count + parent_count) // args.size
+    if args.teamcount > 0 and args.teamcount > people_count:
+        usage_error(f'Team count of {args.teamcount} is larger than the total number of people, which is {people_count}')
 
-    if (kid_count + parent_count) != num_teams * args.size:
-        if not args.inexact:
-            usage_error(f"Cannot create teams of {args.size} with {kid_count + parent_count} people, consider using -u option")
+    extra = 0
+    if args.uneven:
+        if args.teamsize > 0:
+            # could add params that specify rounding direction (this uses python's banker rounding)
+            team_count = rounder(people_count / args.teamsize)
         else:
-            num_teams += 1
+            assert args.teamcount > 0
+            team_count = args.teamcount
+    elif args.drop:
+        if args.teamsize > 0:
+            team_count = people_count // args.teamsize
+            team_size = args.teamsize
+        else:
+            assert args.teamcount > 0
+            team_count = args.teamcount
+            team_size = people_count // team_count
+
+        if team_size:
+            extra = people_count % team_size
+    else:
+        if args.teamsize > 0:
+            if people_count % args.teamsize > 0:
+                usage_error(f"Cannot create teams of exactly {args.teamsize} from {people_count} people, consider using --uneven or --drop option")
+            team_count = people_count // args.teamsize
+        else:
+            assert args.teamcount > 0
+            if people_count % args.teamcount > 0:
+                usage_error(f"Cannot create {args.teamcount} even teams from {people_count} people, consider using --uneven or --drop option")
+            team_count = args.teamcount
+
+    if team_count == 1:
+        usage_error('Inputs would result in only 1 team')
+
+    if extra > 0:
+        if args.verbose:
+            print(f'dropping {extra} {"people" if extra > 1 else "person"}')
+        for i in range(extra):
+            drop = randrange(0, people_count)
+            people_count -= 1
+            if drop > kid_count -1:
+                del parents[drop - kid_count]
+                parent_count -= 1
+            else:
+                del kids[drop]
+                kid_count -= 1
+
+        if args.verbose:
+            print(f'{people_count} people remaining: {kid_count} kids and {parent_count} parents')
 
     retry = True
     count = 0
@@ -94,14 +152,14 @@ def make_teams(args, lines):
         shuffle(kids)
 
         if args.generations:
-            # put kids first so parent teams are smaller when inexact (due to how np.array_split works)
+            # put kids first so parent teams are smaller when uneven (due to how np.array_split works)
             merged = kids + parents
-            teams = np.array_split(merged, num_teams)
+            teams = np.array_split(merged, team_count)
         else:
-            psplit = np.array_split(parents, num_teams)
-            ksplit = np.array_split(kids, num_teams)
+            psplit = np.array_split(parents, team_count)
+            ksplit = np.array_split(kids, team_count)
             ksplit.reverse()
-            for i in range(num_teams):
+            for i in range(team_count):
                 teams.append(np.concatenate([psplit[i], ksplit[i]]))
 
         retry = False
@@ -116,11 +174,11 @@ def make_teams(args, lines):
                     break
         
         if count == args.tries:
-            usage_error(f'Did not create valid teams in {count:,} attempts, consider using -o or -t options')
+            usage_error(f'Did not create valid teams in {count:,} attempts, consider using --oktogether or --tries options')
 
 
     if args.verbose:
-        print(f'\n~~~~ Results ({num_teams} team{"s" if num_teams > 1 else ""})~~~~')
+        print(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""})~~~~')
 
     # take doesn't work with inhomogeneous shape arrays, so loop
     out_teams = []
@@ -142,11 +200,17 @@ def usage_error(msg):
 
 def dump_plan(args):
     print(f'~~~~ Plan ~~~~')
-    size_msg = "approximately" if args.inexact else "exactly"
-    print(f'team sizes of {size_msg} {args.size:,}')
+    if args.teamsize > 0:
+        size_msg = "about" if args.uneven else "exactly"
+        print(f'team sizes of {size_msg} {args.teamsize:,}')
+    else:
+        print(f'team count of {args.teamcount:,}')
 
-    together_msg = "allowed together" if args.oktogether else "kept apart"
-    print(f'family memebers {together_msg}')
+    if args.drop:
+        print(f'drop extra people to make even teams')
+
+    if args.teamsize > 0 and args.uneven:
+        print(f'round number of teams {"to " + args.round if args.round == "closest" else args.round}')
 
     gen_msg = "compete" if args.generations else "mixed"
     print(f'parents and kids {gen_msg}')
@@ -160,29 +224,57 @@ def dump_plan(args):
         else:
             print(f'plain text output with "{args.separator}" separator')
 
+# Note that this modified the passed in arg object
+def normalize_args(args):
+    if args.json and args.separator is not None:
+        usage_error('Cannot specify seperator for json output')
+
+    if (args.teamcount < 2 and args.teamcount != -999) or (args.teamsize < 2 and args.teamsize != -999):
+        usage_error(f'Team size and count must be greater than 1')
+
+    if args.teamcount > 0 and args.teamsize > 0:
+        usage_error('Cannot specify both team size and count')
+
+    if args.teamcount == -999:
+        args.teamcount = 0
+        if args.teamsize == -999:
+            args.teamsize = 2
+    if args.teamsize == -999:
+        args.teamsize = 0
+
+    if args.teamcount == 0 and args.teamsize == 0:
+        args.teamsize = 2;
+
+    if args.drop and args.uneven:
+        usage_error('Can only specify --uneven or --drop, not both')
+
+    if not args.separator:
+        args.separator = ' - '
+
+    if args.round != 'closest' and args.uneven != True and args.teamsize:
+        usage_error('Rounding option only applies when used with --uneven and --teamsize')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create teams from a file listing families of parents and kids (or other people groupings)')
     parser.add_argument('family_file', type=str, help='file containing list of families')
     parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='allow familes to be on the same team')
     parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams of the same generation (parents v kids)')
-    parser.add_argument('-s', '--size', required=False, default=2, type=int, help='team size (default is 2)')
+    parser.add_argument('-s', '--teamsize', required=False, default=-999, type=int, help='size of each team, must be more than 1 (default is 2)')
+    parser.add_argument('-c', '--teamcount', required=False, default=-999, type=int, help='number of teams, must be more than 1')
     parser.add_argument('-t', '--tries', required=False, default=10000, type=int, help='maximum number of attempts to create valid teams (default is 10,000)')
-    parser.add_argument('-i', '--inexact', required=False, action='store_true', help='try to match team size, but allow smaller or uneven team sizes')
+    parser.add_argument('-u', '--uneven', required=False, action='store_true', help='try to match team size, but allow uneven team sizes')
     parser.add_argument('-v', '--verbose', action="count", default=0, help='display more progress information')
-    parser.add_argument('-j', '--json', action='store_true', help='output in json')
+    parser.add_argument('-j', '--json', action='store_true', default=False, help='output in json')
+    parser.add_argument('-d', '--drop', action='store_true', default=False, help='drop random extra people if teams are not even')
+    parser.add_argument('-r', '--round', default='closest', type=str, choices=['closest','down','up'], help='used with --uneven and --teamsize to round resulting number of teams down, up, or to closest even number (default is \'closest\')')
     parser.add_argument('-p', '--separator', required=False, help="separator between team members in printout (default is ' - ')")
     args = parser.parse_args()
-
-    if args.json and args.separator is not None:
-        usage_error('Cannot specify seperator for json output')
-
-    if args.separator is None:
-        args.separator = ' - '
 
     try:
         with open(args.family_file, 'r') as people:
             try:
+                normalize_args(args)
                 result = make_teams(args, people.readlines())
                 print(result)
             except UnicodeDecodeError as uerr:
