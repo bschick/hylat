@@ -85,7 +85,7 @@ def make_teams(args, lines):
     if args.verbose:
         print(f'{people_count} people: {kid_count} kids and {parent_count} parents')
 
-   # common error checking
+    # common error checking
     if args.teamsize > 0 and args.teamsize > people_count:
         usage_error(f'Team size of {args.teamsize} is larger than the total number of people, which is {people_count}')
 
@@ -109,8 +109,7 @@ def make_teams(args, lines):
             team_count = args.teamcount
             team_size = people_count // team_count
 
-        if team_size:
-            extra = people_count % team_size
+        extra = people_count % team_size
     else:
         if args.teamsize > 0:
             if people_count % args.teamsize > 0:
