@@ -92,7 +92,7 @@ def make_teams(args, lines):
     if args.teamcount > 0 and args.teamcount > people_count:
         usage_error(f'Team count of {args.teamcount} is larger than the total number of people, which is {people_count}')
 
-    extra = 0
+    drop_count = 0
     if args.uneven:
         if args.teamsize > 0:
             # could add params that specify rounding direction (this uses python's banker rounding)
@@ -109,7 +109,7 @@ def make_teams(args, lines):
             team_count = args.teamcount
             team_size = people_count // team_count
 
-        extra = people_count % team_size
+        drop_count = people_count % team_size
     else:
         if args.teamsize > 0:
             if people_count % args.teamsize > 0:
@@ -124,10 +124,10 @@ def make_teams(args, lines):
     if team_count == 1:
         usage_error('Inputs would result in only 1 team')
 
-    if extra > 0:
+    if drop_count > 0:
         if args.verbose:
-            print(f'dropping {extra} {"people" if extra > 1 else "person"}')
-        for i in range(extra):
+            print(f'dropping {drop_count} {"people" if drop_count > 1 else "person"}')
+        for i in range(drop_count):
             drop = randrange(0, people_count)
             people_count -= 1
             if drop > kid_count -1:
