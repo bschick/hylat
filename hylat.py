@@ -109,7 +109,7 @@ def make_teams(args, lines):
             team_count = args.teamcount
             team_size = people_count // team_count
 
-        drop_count = people_count % team_size
+        drop_count = people_count - (team_size * team_count)
     else:
         if args.teamsize > 0:
             if people_count % args.teamsize > 0:
