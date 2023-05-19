@@ -1,15 +1,26 @@
-# Enter one family per line with a format of:
-#   ParentList : KidList 
+# Each line is a group of people who you want to be on different teams if possible. Each line
+# could be a family or any group of people who you want on different teams. Within each line
+# there are two categories of people, like parents and kids that this tool can either spread
+# out on different teams or put together.
 #
-# Where ParentList and KidList are comma seperated names. For example, a family line could be:
+# The format of each line is
+#   ParentList : KidList
+#
+# Where ParentList and KidList are comma seperated names. For example, a family line with
+# two parents and one kid would be
 #   Ava Peters, Eric Peters : Weston Peters
 #
-# The ParentList or KidList on each line can be empty, but the line must still have a : separator.
-# An example with kids but no parents:
-#   : Samantha Peake, Sister Peake
+# The ParentList or KidList on each line can be empty. An example with parents but no kids
+#   Jack Manning, Kelly Manning :
 #
-# Rather than "parents" and "kids", you can use whatever categories you want. For example, each
-# line could be a school class including "Teachers: Students" that you want on different teams
+# You may leave out the : seperator as a shortcut way to make each person on a line part of
+# the KidList (the second category). An example with only kids
+#   Samantha Peake, Sister Peake
+#
+# Rather than famlies with parents and kids, you can use whatever categories you have.
+# For example, each line could be a school class with "TeacherList: StudentList" or have just
+# one category of people. Team Generator will always try to seperate the people on each line
+# into different teams.
 #
 # Example families list below (names from https://homepage.net/name_generator/)
 
