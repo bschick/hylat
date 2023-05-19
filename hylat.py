@@ -124,42 +124,44 @@ def make_teams(args, lines):
     if team_count == 1:
         usage_error('Inputs would result in only 1 team')
 
-    if drop_count > 0:
-        if args.verbose:
-            print(f'dropping {drop_count} {"people" if drop_count > 1 else "person"}')
-        for i in range(drop_count):
-            drop = randrange(0, people_count)
-            people_count -= 1
-            if drop > kid_count -1:
-                del parents[drop - kid_count]
-                parent_count -= 1
-            else:
-                del kids[drop]
-                kid_count -= 1
 
-        if args.verbose:
-            print(f'{people_count} people remaining: {kid_count} kids and {parent_count} parents')
+    # Needed because during drop parents or kids can be empty, and the dimensions get lost
+    parents = np.array(parents).reshape((-1,2))
+    kids = np.array(kids).reshape((-1,2))
 
+    # make copies for redropping (below)
+    parents_orig = parents.copy()
+    kids_orig = kids.copy()
+
+    # can end up dropping people that make it impossible to create valid teams, so retry
+    # the drop every 10% of the retry count
+    drop_step = ceil(args.tries / 10)
     retry = True
     count = 0
     teams = []
+    rng = np.random.default_rng()
 
     # need to make this better than brute force someday
     while retry:
+
+        if drop_count and count % drop_step == 0:
+            parents, kids = do_drop(parents_orig, kids_orig, drop_count, args.verbose)
+
         teams = []
-        shuffle(parents)
-        shuffle(kids)
+        rng.shuffle(parents)
+        rng.shuffle(kids)
 
         if args.generations:
             # put kids first so parent teams are smaller when uneven (due to how np.array_split works)
-            merged = kids + parents
+            merged = np.concatenate((kids, parents))
             teams = np.array_split(merged, team_count)
         else:
             psplit = np.array_split(parents, team_count)
             ksplit = np.array_split(kids, team_count)
             ksplit.reverse()
             for i in range(team_count):
-                teams.append(np.concatenate([psplit[i], ksplit[i]]))
+                team = np.concatenate((psplit[i], ksplit[i]))
+                teams.append(team)
 
         retry = False
         if not args.oktogether: 
@@ -171,13 +173,13 @@ def make_teams(args, lines):
                     if args.verbose > 1:
                         print(f'try {count:,} failed due to conflict {list(np.take(t, 0, 1))}')
                     break
-        
+
         if count == args.tries:
             usage_error(f'Did not create valid teams in {count:,} attempts, consider using --oktogether or --tries options')
 
 
     if args.verbose:
-        print(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""})~~~~')
+        print(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}). Took {count+1} tries~~~~')
 
     # take doesn't work with inhomogeneous shape arrays, so loop
     out_teams = []
@@ -192,6 +194,28 @@ def make_teams(args, lines):
             result.append(args.separator.join(t))
         return '\n'.join(result)
 
+
+def do_drop(parents, kids, drop_count, verbose):
+    parent_count = len(parents)
+    kid_count = len(kids)
+    people_count = parent_count + kid_count
+    if drop_count > 0:
+        if verbose:
+            print(f'(re)dropping {drop_count} {"people" if drop_count > 1 else "person"}')
+        for i in range(drop_count):
+            drop = randrange(0, people_count)
+            people_count -= 1
+            if drop > kid_count -1:
+                parents = np.delete(parents, drop - kid_count, 0)
+                parent_count -= 1
+            else:
+                kids = np.delete(kids, drop, 0)
+                kid_count -= 1
+
+        if verbose:
+            print(f'{people_count} people remaining: {kid_count} kids and {parent_count} parents')
+
+    return (parents, kids)
 
 def usage_error(msg):
     raise ValueError(msg)
