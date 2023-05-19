@@ -58,10 +58,15 @@ def make_teams(args, lines):
             if len(family) < 2 or family[0] == '#':
                 continue
 
-            try:
-                pstr, kstr = family.split(':')
-            except:
-                raise ValueError(f'Line {i+1} has {family.count(":")} ":" separators, each line must have one')
+            categories = family.split(':')
+            cat_count = len(categories)
+
+            if cat_count == 1:
+                pstr, kstr = '', family
+            elif cat_count == 2:
+                pstr, kstr = categories
+            else:
+                raise ValueError(f'Line {i+1} has {cat_count} ":" separators, each line must have one or none')
 
             pstr = pstr.strip()
             if pstr:

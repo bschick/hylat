@@ -163,6 +163,31 @@ def test_teamsize6_json():
     members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
     results_helper(args, results, members_start_with)
 
+def test_kids_only():
+    args = Args()
+    args.teamsize = 2
+
+    hylat.normalize_args(args)
+    with open('good_test4.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Kid', 'Kid'] for _ in range(5)]
+    results_helper(args, results, members_start_with)
+
+def test_kids_only2():
+    args = Args()
+    args.teamcount = 3
+    args.oktogether = True
+    args.uneven = True
+
+    hylat.normalize_args(args)
+    with open('good_test4.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['Kid', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with += [['Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    results_helper(args, results, members_start_with)
+
 def test_fail_teamsize_too_big():
     args = Args()
     args.teamsize = 12
