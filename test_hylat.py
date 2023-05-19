@@ -353,6 +353,19 @@ def test_drop():
     members_start_with = [['*', '*', '*', '*'] for _ in range(4)]
     results_helper(args, results, members_start_with)
 
+def test_small_drop():
+    args = Args()
+    args.teamcount = 2
+    args.oktogether = True
+    args.drop = True
+
+    hylat.normalize_args(args)
+    with open('good_test3.txt', 'r') as people:
+        results = hylat.make_teams(args, people.readlines())
+
+    members_start_with = [['*'] for _ in range(2)]
+    results_helper(args, results, members_start_with)
+
 
 def test_drop_teamcount():
     args = Args()
