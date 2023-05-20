@@ -70,7 +70,7 @@ def make_teams(args, lines):
 
             pstr = pstr.strip()
             if pstr:
-                # iter(lambda:i, -1) is an iterator that returns i forever when i > 0
+                # iter(lambda:i, -1) is an iterator that returns i forever when i >= 0
                 ptuples = zip([s.strip() for s in pstr.split(',') if s.strip()], iter(lambda:i, -1))
                 parents.extend(ptuples)
             kstr = kstr.strip()
