@@ -29,9 +29,11 @@ import traceback
 from random import shuffle, randrange
 from math import floor, ceil
 
+def teams_from_str(args, lines):
+    return teams_from_list(args, lines.split('\n'))
 
 # normalize_args function must be called first
-def make_teams(args, lines):
+def teams_from_list(args, lines):
 
     assert args.teamsize >= 0
     assert args.teamcount >= 0
@@ -140,7 +142,7 @@ def make_teams(args, lines):
 
     # can end up dropping people that make it impossible to create valid teams, so retry
     # the drop every 10% of the retry count
-    drop_step = ceil(args.tries / 10)
+    drop_step = min(ceil(args.tries / 10), 100)
     retry = True
     count = 0
     teams = []
@@ -191,13 +193,17 @@ def make_teams(args, lines):
     for t in teams:
         out_teams.append(np.take(t, 0, 1))
 
+    # Result is a dict, the teams value it either a plain string of team of a json string
+    result = { 'team_count' : team_count, 'player_count': people_count - drop_count, 'drop_count': drop_count }
     if args.json:
-        return json.dumps([t.tolist() for t in out_teams]) 
+        result['teams'] = json.dumps([t.tolist() for t in out_teams])
     else:
-        result = []
+        team_list = []
         for t in out_teams:
-            result.append(args.separator.join(t))
-        return '\n'.join(result)
+            team_list.append(args.separator.join(t))
+        result['teams'] = '\n'.join(team_list)
+
+    return result
 
 
 def do_drop(parents, kids, drop_count, verbose):
@@ -282,6 +288,23 @@ def normalize_args(args):
     if args.round != 'closest' and args.uneven != True and args.teamsize:
         usage_error('Rounding option only applies when used with --uneven and --teamsize')
 
+class Args:
+    # init with default values
+    def __init__(self):
+        self.oktogether = False
+        self.generations = False
+        self.teamsize = -999
+        self.teamcount = -999
+        self.tries = 10000
+        self.uneven = False
+        self.drop = False
+        self.round = 'closest'
+        self.verbose = 0
+        self.json = False
+        self.separator = None
+
+def default_args():
+    return Args()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create teams from a file listing families of parents and kids (or other people groupings)')
@@ -303,8 +326,8 @@ if __name__ == "__main__":
         with open(args.family_file, 'r') as people:
             try:
                 normalize_args(args)
-                result = make_teams(args, people.readlines())
-                print(result)
+                result = teams_from_list(args, people.readlines())
+                print(result['teams'])
             except UnicodeDecodeError as uerr:
                 print(f'Could not read "{args.family_file}". Contains unreadable characters\n  hylat.py -h for help')
                 sys.exit(1)
