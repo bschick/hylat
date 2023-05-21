@@ -33,7 +33,7 @@ def lp(msg):
     print(msg)
 
 def teams_from_str(args, lines):
-    return teams_from_list(args, lines.split('\n'))
+    return teams_from_list(args, lines.splitlines(keepends=False))
 
 # normalize_args function must be called first
 def teams_from_list(args, lines):
