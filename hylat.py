@@ -29,6 +29,9 @@ import traceback
 from random import shuffle, randrange
 from math import floor, ceil
 
+def lp(msg):
+    print(msg)
+
 def teams_from_str(args, lines):
     return teams_from_list(args, lines.split('\n'))
 
@@ -40,7 +43,7 @@ def teams_from_list(args, lines):
 
     if args.verbose:
         dump_plan(args)
-        print(f'\n~~~~ Distributing ~~~~')
+        lp(f'\n~~~~ Distributing ~~~~')
 
     parents = []
     kids = []
@@ -90,7 +93,7 @@ def teams_from_list(args, lines):
     people_count = kid_count + parent_count
 
     if args.verbose:
-        print(f'{people_count} people: {kid_count} kids and {parent_count} parents')
+        lp(f'{people_count} people: {kid_count} kids and {parent_count} parents')
 
     # common error checking
     if args.teamsize > 0 and args.teamsize > people_count:
@@ -178,7 +181,7 @@ def teams_from_list(args, lines):
                     count += 1
                     retry = True
                     if args.verbose > 1:
-                        print(f'try {count:,} failed due to conflict {list(np.take(t, 0, 1))}')
+                        lp(f'try {count:,} failed due to conflict {list(np.take(t, 0, 1))}')
                     break
 
         if count == args.tries:
@@ -186,7 +189,7 @@ def teams_from_list(args, lines):
 
 
     if args.verbose:
-        print(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}). Took {count+1} tries~~~~')
+        lp(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}). Took {count+1} tries~~~~')
 
     # take doesn't work with inhomogeneous shape arrays, so loop
     out_teams = []
@@ -212,7 +215,7 @@ def do_drop(parents, kids, drop_count, verbose):
     people_count = parent_count + kid_count
     if drop_count > 0:
         if verbose:
-            print(f'(re)dropping {drop_count} {"people" if drop_count > 1 else "person"}')
+            lp(f'(re)dropping {drop_count} {"people" if drop_count > 1 else "person"}')
         for i in range(drop_count):
             drop = randrange(0, people_count)
             people_count -= 1
@@ -224,7 +227,7 @@ def do_drop(parents, kids, drop_count, verbose):
                 kid_count -= 1
 
         if verbose:
-            print(f'{people_count} people remaining: {kid_count} kids and {parent_count} parents')
+            lp(f'{people_count} people remaining: {kid_count} kids and {parent_count} parents')
 
     return (parents, kids)
 
@@ -233,30 +236,30 @@ def usage_error(msg):
 
 
 def dump_plan(args):
-    print(f'~~~~ Plan ~~~~')
+    lp(f'~~~~ Plan ~~~~')
     if args.teamsize > 0:
         size_msg = "about" if args.uneven else "exactly"
-        print(f'team sizes of {size_msg} {args.teamsize:,}')
+        lp(f'team sizes of {size_msg} {args.teamsize:,}')
     else:
-        print(f'team count of {args.teamcount:,}')
+        lp(f'team count of {args.teamcount:,}')
 
     if args.drop:
-        print(f'drop extra people to make even teams')
+        lp(f'drop extra people to make even teams')
 
     if args.teamsize > 0 and args.uneven:
-        print(f'round number of teams {"to " + args.round if args.round == "closest" else args.round}')
+        lp(f'round number of teams {"to " + args.round if args.round == "closest" else args.round}')
 
     gen_msg = "compete" if args.generations else "mixed"
-    print(f'parents and kids {gen_msg}')
+    lp(f'parents and kids {gen_msg}')
 
     if not args.oktogether and args.verbose > 1:
-        print(f'maximum of {args.tries:,} tries to create valid teams')
+        lp(f'maximum of {args.tries:,} tries to create valid teams')
 
     if args.verbose > 1:
         if args.json:
-            print(f'json output')
+            lp(f'json output')
         else:
-            print(f'plain text output with "{args.separator}" separator')
+            lp(f'plain text output with "{args.separator}" separator')
 
 # Note that this modified the passed in arg object
 def normalize_args(args):
@@ -327,15 +330,15 @@ if __name__ == "__main__":
             try:
                 normalize_args(args)
                 result = teams_from_list(args, people.readlines())
-                print(result['teams'])
+                lp(result['teams'])
             except UnicodeDecodeError as uerr:
-                print(f'Could not read "{args.family_file}". Contains unreadable characters\n  hylat.py -h for help')
+                lp(f'Could not read "{args.family_file}". Contains unreadable characters\n  hylat.py -h for help')
                 sys.exit(1)
             except ValueError as verr:
 #                traceback.print_exc()
-                print(f'{str(verr)}\n  hylat.py -h for help')
+                lp(f'{str(verr)}\n  hylat.py -h for help')
                 sys.exit(1)
     except Exception as ex:
 #        traceback.print_exc()
-        print(f'Could not open or load "{args.family_file}". {ex}')
+        lp(f'Could not open or load "{args.family_file}". {ex}')
         sys.exit(2)
