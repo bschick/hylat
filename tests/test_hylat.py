@@ -104,6 +104,33 @@ def test_default_str():
     results_helper(args, results, members_start_with, 0)
 
 
+def test_default_wrapped_str():
+    args = hylat.default_args()
+    args.teamsize = 2
+
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        content = people.read()
+
+    results = hylat.wrapped_teams_from_str(args, content)
+    assert results.get('error', None) is None
+
+    members_start_with = [['Parent', 'Kid'] for _ in range(7)]
+    members_start_with += [['Kid', 'Kid'] for _ in range(2)]
+    results_helper(args, results, members_start_with, 0)
+
+
+def test_default_wrapped_str_error():
+    args = hylat.default_args()
+    args.teamsize = 4
+
+    hylat.normalize_args(args)
+    with open('good_test1.txt', 'r') as people:
+        content = people.read()
+
+    results = hylat.wrapped_teams_from_str(args, content)
+    assert results['error'].startswith('Cannot create teams of exactly 4')
+
 
 def test_default_json():
     args = hylat.default_args()

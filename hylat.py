@@ -32,6 +32,16 @@ from math import floor, ceil
 def lp(msg):
     print(msg)
 
+
+def wrapped_teams_from_str(args, lines):
+    try:
+        return teams_from_str(args, lines)
+    except ValueError as verr:
+        return {'error': f'{verr}'}
+    except Exception as ex:
+        traceback.print_exc()
+        return {'error': f'unknown error'}
+
 def teams_from_str(args, lines):
     return teams_from_list(args, lines.splitlines(keepends=False))
 
@@ -55,6 +65,7 @@ def teams_from_list(args, lines):
     else:
         rounder = ceil
 
+    family_sizes = []
     try:
         for i, family in enumerate(lines):
             if not isinstance(family, str):
@@ -74,14 +85,20 @@ def teams_from_list(args, lines):
                 raise ValueError(f'Line {i+1} has {cat_count} ":" separators, each line must have one or none')
 
             pstr = pstr.strip()
+            fam_size = 0
             if pstr:
                 # iter(lambda:i, -1) is an iterator that returns i forever when i >= 0
                 ptuples = zip([s.strip() for s in pstr.split(',') if s.strip()], iter(lambda:i, -1))
+                pprev = len(parents)
                 parents.extend(ptuples)
+                fam_size += len(parents) - pprev
             kstr = kstr.strip()
             if kstr:
                 ktuples = zip([s.strip() for s in kstr.split(',') if s.strip()], iter(lambda:i, -1))
+                kprev = len(kids)
                 kids.extend(ktuples)
+                fam_size += len(kids) - kprev
+            family_sizes.append(fam_size)
     except ValueError as verr:
         usage_error(f'Could not read family data. {verr}')
     except Exception as ex:
@@ -91,6 +108,7 @@ def teams_from_list(args, lines):
     kid_count = len(kids)
     parent_count = len(parents)
     people_count = kid_count + parent_count
+    assert sum(family_sizes) == people_count
 
     if args.verbose:
         lp(f'{people_count} people: {kid_count} kids and {parent_count} parents')
@@ -105,7 +123,6 @@ def teams_from_list(args, lines):
     drop_count = 0
     if args.uneven:
         if args.teamsize > 0:
-            # could add params that specify rounding direction (this uses python's banker rounding)
             team_count = rounder(people_count / args.teamsize)
         else:
             assert args.teamcount > 0
@@ -123,17 +140,19 @@ def teams_from_list(args, lines):
     else:
         if args.teamsize > 0:
             if people_count % args.teamsize > 0:
-                usage_error(f"Cannot create teams of exactly {args.teamsize} from {people_count} people, consider using --uneven or --drop option")
+                usage_error(f"Cannot create teams of exactly {args.teamsize} from {people_count} people. Consider using the 'uneven' or 'drop' option")
             team_count = people_count // args.teamsize
         else:
             assert args.teamcount > 0
             if people_count % args.teamcount > 0:
-                usage_error(f"Cannot create {args.teamcount} even teams from {people_count} people, consider using --uneven or --drop option")
+                usage_error(f"Cannot create {args.teamcount} even teams from {people_count} people. Consider using the 'uneven' or 'drop' option")
             team_count = args.teamcount
 
     if team_count == 1:
         usage_error('Inputs would result in only 1 team')
 
+    if not args.oktogether and (max(family_sizes) - drop_count) > team_count:
+        usage_error(f"Inputs result in {team_count} teams, which is not enough to distribute the largest group of {max(family_sizes)} people. Consider using the 'oktogether' option")
 
     # Needed because during drop parents or kids can be empty, and the dimensions get lost
     parents = np.array(parents).reshape((-1,2))
@@ -185,7 +204,7 @@ def teams_from_list(args, lines):
                     break
 
         if count == args.tries:
-            usage_error(f'Did not create valid teams in {count:,} attempts, consider using --oktogether or --tries options')
+            usage_error(f"Did not create valid teams in {count:,} attempts. Consider using the 'oktogether'' or 'tries' options")
 
 
     if args.verbose:
@@ -197,7 +216,8 @@ def teams_from_list(args, lines):
         out_teams.append(np.take(t, 0, 1))
 
     # Result is a dict, the teams value it either a plain string of team of a json string
-    result = { 'team_count' : team_count, 'player_count': people_count - drop_count, 'drop_count': drop_count }
+    result = { 'team_count' : team_count, 'player_count': people_count - drop_count,
+               'drop_count': drop_count, 'tries': count+1 }
     if args.json:
         result['teams'] = json.dumps([t.tolist() for t in out_teams])
     else:
@@ -263,7 +283,7 @@ def dump_plan(args):
 
 # Note that this modified the passed in arg object
 def normalize_args(args):
-    if args.json and args.separator is not None:
+    if args.json and args.separator != '':
         usage_error('Cannot specify seperator for json output')
 
     if (args.teamcount < 2 and args.teamcount != -999) or (args.teamsize < 2 and args.teamsize != -999):
@@ -283,13 +303,13 @@ def normalize_args(args):
         args.teamsize = 2;
 
     if args.drop and args.uneven:
-        usage_error('Can only specify --uneven or --drop, not both')
+        usage_error("Can only specify 'uneven' or 'drop', not both")
 
-    if not args.separator:
+    if args.separator == '':
         args.separator = ' - '
 
     if args.round != 'closest' and args.uneven != True and args.teamsize:
-        usage_error('Rounding option only applies when used with --uneven and --teamsize')
+        usage_error("Rounding option only applies when used with 'uneven' and 'teamsize'")
 
 class Args:
     # init with default values
@@ -304,7 +324,7 @@ class Args:
         self.round = 'closest'
         self.verbose = 0
         self.json = False
-        self.separator = None
+        self.separator = ''
 
 def default_args():
     return Args()
@@ -321,7 +341,7 @@ if __name__ == "__main__":
     parser.add_argument('-u', '--uneven', required=False, action='store_true', help='try to match team size, but allow uneven team sizes')
     parser.add_argument('-j', '--json', action='store_true', default=False, help='output in json')
     parser.add_argument('-r', '--round', default='closest', type=str, choices=['closest','down','up'], help='used with --uneven and --teamsize to round resulting number of teams down, up, or to closest even number (default is \'closest\')')
-    parser.add_argument('-p', '--separator', required=False, help="separator between team members in printout (default is ' - ')")
+    parser.add_argument('-p', '--separator', required=False, default='', help="separator between team members in printout (default is ' - ')")
     parser.add_argument('-v', '--verbose', action="count", default=0, help='display more progress information')
     args = parser.parse_args()
 
