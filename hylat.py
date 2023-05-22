@@ -29,9 +29,9 @@ import traceback
 from random import shuffle, randrange
 from math import floor, ceil
 
+
 def lp(msg):
     print(msg)
-
 
 def wrapped_teams_from_str(args, lines):
     try:
@@ -151,8 +151,14 @@ def teams_from_list(args, lines):
     if team_count == 1:
         usage_error('Inputs would result in only 1 team')
 
-    if not args.oktogether and (max(family_sizes) - drop_count) > team_count:
-        usage_error(f"Inputs result in {team_count} teams, which is not enough to distribute the largest group of {max(family_sizes)} people. Consider using the 'oktogether' option")
+    # Determine if lagest families make it impossible to avoid overalap. We should use this to
+    # stear drops below to larger families rather than just be random. Could also use this to
+    # increase drop_count or team_count and restart
+    if not args.oktogether:
+        # filter to families larger than team_count, then subtract team_count from each to find extras
+        extras = [fsz - team_count for fsz in filter(lambda sz: sz > team_count, family_sizes)]
+        if (sum(extras) - drop_count) > 0:
+            usage_error(f"Inputs result in {team_count} teams, which is not enough to distribute the largest group of {max(family_sizes)} people. Consider using the 'oktogether' option")
 
     # Needed because during drop parents or kids can be empty, and the dimensions get lost
     parents = np.array(parents).reshape((-1,2))
