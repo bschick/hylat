@@ -45,8 +45,9 @@ def wrapped_teams_from_str(args, lines):
 def teams_from_str(args, lines):
     return teams_from_list(args, lines.splitlines(keepends=False))
 
-# normalize_args function must be called first
 def teams_from_list(args, lines):
+
+    normalize_args(args)
 
     assert args.teamsize >= 0
     assert args.teamcount >= 0
@@ -292,8 +293,8 @@ def normalize_args(args):
     if args.json and args.separator != '':
         usage_error('Cannot specify seperator for json output')
 
-    if (args.teamcount < 2 and args.teamcount != -999) or (args.teamsize < 2 and args.teamsize != -999):
-        usage_error(f'Team size and count must be greater than 1')
+    if (args.teamcount < 2 and args.teamcount != -999) and (args.teamsize < 2 and args.teamsize != -999):
+        usage_error(f'Team size or count must be greater than 1')
 
     if args.teamcount > 0 and args.teamsize > 0:
         usage_error('Cannot specify both team size and count')
@@ -354,7 +355,6 @@ if __name__ == "__main__":
     try:
         with open(args.family_file, 'r') as people:
             try:
-                normalize_args(args)
                 result = teams_from_list(args, people.readlines())
                 lp(result['teams'])
             except UnicodeDecodeError as uerr:

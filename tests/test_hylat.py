@@ -80,7 +80,6 @@ def test_default():
     args = hylat.default_args()
     args.teamsize = 2
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -93,7 +92,6 @@ def test_default_str():
     args = hylat.default_args()
     args.teamsize = 2
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         content = people.read()
 
@@ -108,10 +106,10 @@ def test_default_wrapped_str():
     args = hylat.default_args()
     args.teamsize = 2
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         content = people.read()
 
+    # wrapped cataches errors and returns them in json (should have none)
     results = hylat.wrapped_teams_from_str(args, content)
     assert results.get('error', None) is None
 
@@ -124,10 +122,10 @@ def test_default_wrapped_str_error():
     args = hylat.default_args()
     args.teamsize = 4
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         content = people.read()
 
+    # wrapped cataches errors and returns them in json (should get one)
     results = hylat.wrapped_teams_from_str(args, content)
     assert results['error'].startswith('Cannot create teams of exactly 4')
 
@@ -137,7 +135,6 @@ def test_default_json():
     args.teamsize = 2
     args.json = True
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -149,7 +146,6 @@ def test_teamcount3():
     args = hylat.default_args()
     args.teamcount = 3
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -161,7 +157,6 @@ def test_teamcount9():
     args = hylat.default_args()
     args.teamcount = 9
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -174,7 +169,6 @@ def test_teamsize3():
     args = hylat.default_args()
     args.teamsize = 3
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -188,7 +182,6 @@ def test_teamsize6_json():
     args.teamsize = 6
     args.json = True
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -200,7 +193,6 @@ def test_kids_only():
     args = hylat.default_args()
     args.teamsize = 2
 
-    hylat.normalize_args(args)
     with open('good_test4.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -213,7 +205,6 @@ def test_kids_only2():
     args.oktogether = True
     args.uneven = True
 
-    hylat.normalize_args(args)
     with open('good_test4.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -226,7 +217,6 @@ def test_fail_teamsize_too_big():
     args.teamsize = 12
     args.oktogether = True
 
-    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
@@ -237,7 +227,6 @@ def test_fail_teamsize_too_big2():
     args.oktogether = True
     args.uneven = True
 
-    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
@@ -249,7 +238,6 @@ def test_fail_teamcount_too_big():
     args.oktogether = True
     args.drop = True
 
-    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
@@ -263,7 +251,6 @@ def test_teamsize6_gen_oktogether_uneven():
     args.generations = True
     args.uneven = True # should do nothing in this test
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -277,7 +264,6 @@ def test_teamsize6_gen_oktogether_uneven():
     args.oktogether = True
     args.generations = True
     args.uneven = False # should do nothing in this test
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -290,7 +276,6 @@ def test_oktogether():
     args.oktogether = True
 
     # test2 cannot produce teams of 2 without oktogether
-    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -303,7 +288,6 @@ def test_oktogether_teamcount():
     args.oktogether = True
 
     # test2 cannot produce teams of 2 without oktogether
-    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -315,8 +299,6 @@ def test_oktogether_teamcount6():
     args.teamcount = 6
     args.oktogether = True
 
-    # test2 cannot produce teams of 2 without oktogether
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -332,7 +314,6 @@ def test_fail_not_oktogether():
     args.tries = 1000
 
     # test2 cannot produce teams of 2 without oktogether
-    hylat.normalize_args(args)
     with open('good_test2.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
@@ -343,8 +324,6 @@ def test_pvk():
     args.teamsize = 2
     args.generations = True
 
-    # test2 cannot produce teams of 2 without oktogether
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -361,7 +340,6 @@ def test_uneven1():
         args.uneven = True
 
         args.round = r
-        hylat.normalize_args(args)
         with open('good_test1.txt', 'r') as people:
             results = hylat.teams_from_list(args, people.readlines())
 
@@ -374,7 +352,6 @@ def test_uneven1():
     args.teamsize = 4
     args.uneven = True
     args.round = 'up'
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -389,7 +366,6 @@ def test_uneven2():
     args.uneven = True
     args.round = 'up'
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -403,7 +379,6 @@ def test_drop():
     args.teamsize = 4
     args.drop = True
     
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -416,7 +391,6 @@ def test_small_drop():
     args.teamcount = 2
     args.drop = True
 
-    hylat.normalize_args(args)
     with open('good_test3.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -429,7 +403,6 @@ def test_drop_teamcount():
     args.teamcount = 4
     args.drop = True
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
@@ -441,7 +414,6 @@ def test_fail_noteven():
     args = hylat.default_args()
     args.teamsize = 4
 
-    hylat.normalize_args(args)
     with open('good_test1.txt', 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
@@ -458,7 +430,6 @@ def do_fail_input(file_name):
     args.uneven = True
     args.oktogether = True
 
-    hylat.normalize_args(args)
     with open(file_name, 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
@@ -470,7 +441,6 @@ def test_fail_binary():
     args.uneven = True
     args.oktogether = True
 
-    hylat.normalize_args(args)
     with open('bad_test5.txt', 'rb') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.read())
