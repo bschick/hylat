@@ -72,7 +72,7 @@ def teams_from_list(args, lines):
             if not isinstance(family, str):
                 raise ValueError('Contains unreadable characters')
             family = family.strip()
-            if len(family) < 2 or family[0] == '#':
+            if len(family) < 1 or family[0] == '#':
                 continue
 
             categories = family.split(':')
