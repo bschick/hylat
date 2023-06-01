@@ -1,0 +1,4 @@
+Parent_1_1, Parent_2_1
+: Kid_1_2, Kid_2_2
+# intentionally wrong "family" number below to ensure it is detected by tests
+Parent_1_1 : Kid_1_1

@@ -1,0 +1,11 @@
+
+Parent_1_1: Kid_1_1
+Parent_1_2, Parent_2_2 : Kid_1_2
+Parent_1_3: Kid_1_3, Kid_2_3
+: Kid_1_4, Kid_2_4
+::Extra_1_5
+: Kid_1_6
+: Kid_1_7
+Parent_1_8:
+Parent_1_9: Kid_1_9,Kid_2_9,
+Parent_1_10: Kid_1_10,  ,,:Extra_1_10,Extra_2_10

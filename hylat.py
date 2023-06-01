@@ -26,7 +26,7 @@ import argparse
 import json
 import numpy as np
 import traceback
-from random import shuffle, randrange
+from random import sample
 from math import floor, ceil
 
 
@@ -56,9 +56,6 @@ def teams_from_list(args, lines):
         dump_plan(args)
         lp(f'\n~~~~ Distributing ~~~~')
 
-    parents = []
-    kids = []
-
     if args.round == 'closest':
         rounder = round
     elif args.round == 'down':
@@ -67,6 +64,7 @@ def teams_from_list(args, lines):
         rounder = ceil
 
     family_sizes = []
+    categories = []
     try:
         for i, family in enumerate(lines):
             if not isinstance(family, str):
@@ -75,44 +73,30 @@ def teams_from_list(args, lines):
             if len(family) < 1 or family[0] == '#':
                 continue
 
-            categories = family.split(':')
-            cat_count = len(categories)
-
-            if cat_count == 1:
-                pstr, kstr = '', family
-            elif cat_count == 2:
-                pstr, kstr = categories
-            else:
-                raise ValueError(f'Line {i+1} has {cat_count} ":" separators, each line must have one or none')
-
-            pstr = pstr.strip()
             fam_size = 0
-            if pstr:
-                # iter(lambda:i, -1) is an iterator that returns i forever when i >= 0
-                ptuples = zip([s.strip() for s in pstr.split(',') if s.strip()], iter(lambda:i, -1))
-                pprev = len(parents)
-                parents.extend(ptuples)
-                fam_size += len(parents) - pprev
-            kstr = kstr.strip()
-            if kstr:
-                ktuples = zip([s.strip() for s in kstr.split(',') if s.strip()], iter(lambda:i, -1))
-                kprev = len(kids)
-                kids.extend(ktuples)
-                fam_size += len(kids) - kprev
+            cat_strings = family.split(':')
+            for cat_num, cat_string in enumerate(cat_strings):
+                cat_string = cat_string.strip()
+                if cat_string:
+                    # iter(lambda:i, -1) is an iterator that returns i forever when i >= 0
+                    tuples = list(zip([s.strip() for s in cat_string.split(',') if s.strip()], iter(lambda:i, -1), iter(lambda:cat_num, -1) ))
+                    if len(categories) <= cat_num:
+                        categories.append(tuples)
+                    else:
+                        categories[cat_num].extend(tuples)
+                    fam_size += len(tuples)
+
             family_sizes.append(fam_size)
     except ValueError as verr:
         usage_error(f'Could not read family data. {verr}')
     except Exception as ex:
         usage_error(f'Could not read family data.')
 
-
-    kid_count = len(kids)
-    parent_count = len(parents)
-    people_count = kid_count + parent_count
-    assert sum(family_sizes) == people_count
+    remaining_count = people_count = sum(family_sizes)
+    category_count = len(categories)
 
     if args.verbose:
-        lp(f'{people_count} people: {kid_count} kids and {parent_count} parents')
+        lp(f'{people_count} people in {len(family_sizes)} families with {category_count} categories, {[len(cat) for cat in categories]} people per category')
 
     # common error checking
     if args.teamsize > 0 and args.teamsize > people_count:
@@ -161,13 +145,13 @@ def teams_from_list(args, lines):
         if (sum(extras) - drop_count) > 0:
             usage_error(f"Inputs result in {team_count} teams, which is not enough to distribute the largest group of {max(family_sizes)} people. Consider using the 'oktogether' option")
 
-    # Needed because during drop parents or kids can be empty, and the dimensions get lost
-    parents = np.array(parents).reshape((-1,2))
-    kids = np.array(kids).reshape((-1,2))
+
+    # Needed because during drop categories can be empty, and the dimensions get lost
+    for cat_num, cat in enumerate(categories):
+        categories[cat_num] = np.array(cat).reshape((-1, 3))
 
     # make copies for redropping (below)
-    parents_orig = parents.copy()
-    kids_orig = kids.copy()
+    categories_orig = categories.copy()
 
     # can end up dropping people that make it impossible to create valid teams, so retry
     # the drop every 10% of the retry count
@@ -177,27 +161,33 @@ def teams_from_list(args, lines):
     teams = []
     rng = np.random.default_rng()
 
+    categories_copy = categories_orig.copy()
+
     # need to make this better than brute force someday
     while retry:
+        if drop_count > 0 and count % drop_step == 0:
+            categories_copy = do_drop(categories_orig, drop_count, args.verbose)
+            remaining_count = sum([len(cat) for cat in categories_copy])
 
-        if drop_count and count % drop_step == 0:
-            parents, kids = do_drop(parents_orig, kids_orig, drop_count, args.verbose)
+        categories = categories_copy.copy()
+
+        for cat in categories:
+            rng.shuffle(cat)
 
         teams = []
-        rng.shuffle(parents)
-        rng.shuffle(kids)
-
         if args.generations:
-            # put kids first so parent teams are smaller when uneven (due to how np.array_split works)
-            merged = np.concatenate((kids, parents))
+            merged = np.concatenate(categories)
             teams = np.array_split(merged, team_count)
         else:
-            psplit = np.array_split(parents, team_count)
-            ksplit = np.array_split(kids, team_count)
-            ksplit.reverse()
-            for i in range(team_count):
-                team = np.concatenate((psplit[i], ksplit[i]))
-                teams.append(team)
+            balance_categories(categories, team_count)
+
+            for cat in categories:
+                tsplit = np.array_split(cat, team_count)
+                for t in range(team_count):
+                    if len(teams) <= t:
+                        teams.append(tsplit[t])
+                    else:
+                        teams[t] = np.concatenate((teams[t], tsplit[t]))
 
         retry = False
         if not args.oktogether: 
@@ -215,16 +205,21 @@ def teams_from_list(args, lines):
 
 
     if args.verbose:
-        lp(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}). Took {count+1} tries~~~~')
+        lp(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}, {remaining_count} people). Took {count+1} tries~~~~')
 
     # take doesn't work with inhomogeneous shape arrays, so loop
     out_teams = []
     for t in teams:
+        # sort the team by the people's original category
+        # (sorting in numpy is a bit tricky)
+        cat_nums = np.take(t, 2, 1)
+        t = t[np.argsort(cat_nums)]
+
         out_teams.append(np.take(t, 0, 1))
 
     # Result is a dict, the teams value it either a plain string of team of a json string
-    result = { 'team_count' : team_count, 'player_count': people_count - drop_count,
-               'drop_count': drop_count, 'tries': count+1 }
+    result = { 'team_count' : team_count, 'player_count': remaining_count,
+              'category_count': category_count, 'drop_count': drop_count, 'tries': count+1 }
     if args.json:
         result['teams'] = json.dumps([t.tolist() for t in out_teams])
     else:
@@ -235,28 +230,79 @@ def teams_from_list(args, lines):
 
     return result
 
+# When teams are created they are created "accross" categories so that categories are
+# spread out as evenly as possible. To even sized teams, however, that cannot alawys be
+# perfect and we have to balance categories by moving players from one to another
+def balance_categories(categories, team_count):
+    # First pass is to push players on overloaded categories from the end of their cat
+    # to the end of the next category. This cascades to the end (creating an extra category
+    # if neded). The goal reduce category duplication
+    cat_num = 0
+#    print(f'team_count: {team_count}')
+#    print(f'cats0:{[len(cat) for cat in categories]} {categories}')
+    while True:
+        cat = categories[cat_num]
+        extra = len(cat) - team_count
+        if extra > 0:
+#            print(f'pushing: {extra}')
+            if cat_num == len(categories) - 1:
+                categories.append(np.empty((0, 3)))
 
-def do_drop(parents, kids, drop_count, verbose):
-    parent_count = len(parents)
-    kid_count = len(kids)
-    people_count = parent_count + kid_count
+            categories[cat_num+1] = np.append(categories[cat_num+1], cat[-extra:], 0)
+            categories[cat_num] = cat[:team_count]
+        cat_num += 1
+        if cat_num == len(categories):
+            break
+
+#    print(f'cats1:{[len(cat) for cat in categories]} {categories}')
+
+    # Second pass is to fill in categories by pulling people from the start of the
+    # next category to the end of the current category. Could  combine these into
+    # one pass, but this is easier to reason
+    for cat_num in range(len(categories)):
+        cat = categories[cat_num]
+        short = team_count - len(cat)
+#        print(f'pull: {short}')
+        pull_from = cat_num + 1
+        while short > 0 and pull_from < len(categories):
+            cat_from = categories[pull_from]
+            avail = min(short, len(cat_from))
+#            print(f'avail: {avail}')
+            if avail > 0:
+                short -= avail
+#                print(f'remaining: {short}')
+                categories[cat_num] = cat = np.append(cat, cat_from[:avail], 0)
+                categories[pull_from] = cat_from[avail:]
+            pull_from += 1
+
+#    print(f'cats2:{[len(cat) for cat in categories]} {categories}')
+
+
+def do_drop(categories_in, drop_count, verbose):
+    categories_out = categories_in.copy()
     if drop_count > 0:
         if verbose:
             lp(f'(re)dropping {drop_count} {"people" if drop_count > 1 else "person"}')
-        for i in range(drop_count):
-            drop = randrange(0, people_count)
-            people_count -= 1
-            if drop > kid_count -1:
-                parents = np.delete(parents, drop - kid_count, 0)
-                parent_count -= 1
-            else:
-                kids = np.delete(kids, drop, 0)
-                kid_count -= 1
+
+        drop_index = []
+        people_count = 0
+        for cat_num, cat in enumerate(categories_out):
+            for p_num, _ in enumerate(cat):
+                drop_index.append((cat_num, p_num))
+                people_count += 1
+
+        drops = sample(drop_index, drop_count)
+        for cat_num, cat in enumerate(categories_out):
+            cat_drops = list(filter(lambda d: d[0]==cat_num, drops))
+            if cat_drops:
+                people_drops = np.take(cat_drops, 1, 1)
+                categories_out[cat_num] = np.delete(categories_out[cat_num], people_drops, 0)
 
         if verbose:
-            lp(f'{people_count} people remaining: {kid_count} kids and {parent_count} parents')
+            lp(f'{people_count} people remaining, {[len(cat) for cat in categories_out]} people per category')
 
-    return (parents, kids)
+    return categories_out
+
 
 def usage_error(msg):
     raise ValueError(msg)
@@ -276,8 +322,8 @@ def dump_plan(args):
     if args.teamsize > 0 and args.uneven:
         lp(f'round number of teams {"to " + args.round if args.round == "closest" else args.round}')
 
-    gen_msg = "compete" if args.generations else "mixed"
-    lp(f'parents and kids {gen_msg}')
+    gen_msg = "compete" if args.generations else "spread out"
+    lp(f'generations {gen_msg}')
 
     if not args.oktogether and args.verbose > 1:
         lp(f'maximum of {args.tries:,} tries to create valid teams')
@@ -337,7 +383,7 @@ def default_args():
     return Args()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Create teams from a file listing families of parents and kids (or other people groupings)')
+    parser = argparse.ArgumentParser(description='Create teams from a file listing groups of people in different categories (like family with kids and parents)')
     parser.add_argument('family_file', type=str, help='file containing list of families')
     parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='allow familes to be on the same team')
     parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams of the same generation (parents v kids)')

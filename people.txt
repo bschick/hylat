@@ -1,35 +1,35 @@
 # Each line is a group of people who you want to be on different teams if possible. Each line
 # could be a family or any group of people who you want on different teams. Within each line
-# there are two categories of people, like parents and kids that this tool can either spread
-# out on different teams or put together.
+# there are one or more categories of people, like parents and kids, that this tool can either
+# spread out on different teams or keep together depending the selected options. Categories
+# are separated by a colon and people within categories are comma seperated lists.
 #
-# The format of each line is
-#   ParentList : KidList
+# Using the family example, to have families end up on different teams with parents and kids
+# spread out evenly across teams, each line would have one family with kids as the first
+# category and parents as the second. An example line with one kid and two parents
+#   Weston Peters : Ava Peters, Eric Peters
 #
-# Where ParentList and KidList are comma seperated names. For example, a family line with
-# two parents and one kid would be
-#   Ava Peters, Eric Peters : Weston Peters
+# The categories on each line can be empty. An example line with parents but no kids
+#   : Jack Manning, Kelly Manning
 #
-# The ParentList or KidList on each line can be empty. An example with parents but no kids
-#   Jack Manning, Kelly Manning :
-#
-# You may leave out the : seperator as a shortcut way to make each person on a line part of
-# the KidList (the second category). An example with only kids
+# You may leave out the : separator as a shortcut way to make each person on a line part of
+# the first category. An example line with only kids
 #   Samantha Peake, Sister Peake
 #
 # Rather than famlies with parents and kids, you can use whatever categories you have.
-# For example, each line could be a school class with "TeacherList: StudentList" or have just
-# one category of people. Team Generator will always try to seperate the people on each line
-# into different teams.
+# For example, each line could be a school class with "TeacherList: StudentList". You can
+# also not use categories at all or have more than two. Team Generator will always try to
+# put the people on each line onto different teams and then either spread out people in the
+# same category or group them together based on the options you select.
 #
 # Example families list below (names from https://homepage.net/name_generator/)
 
-Gordon Wallace: Hills Wallace
-Ava Peters, Eric Peters : Weston Peters
-Jack Manning: Craig Manning, Sara Manning
-: Samantha Peake, Sister Peake
-: Luke
-: James Freeman
-Felicity Allan:
-Olivia Randall: Matthew Randall,Parker Randall
-Parent Gray: Kid Gray
+Hills Wallace: Gordon Wallace
+Weston Peters: Ava Peters, Eric Peters
+Craig Manning, Sara Manning : Jack Manning
+Samantha Peake, Sister Peake
+Luke
+James Freeman
+: Felicity Allan
+ Matthew Randall,Parker Randall: Olivia Randall
+ Kid Gray: Parent Gray

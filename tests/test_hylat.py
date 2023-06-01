@@ -33,6 +33,10 @@ def results_helper(args, results, members_start_with, drop_count):
     assert drop_count == results['drop_count']
     assert results['player_count'] == sum(members_per_team)
 
+    cats = np.unique(np.hstack(members_start_with))
+    if cats[0] != '*':
+        assert len(cats) == results['category_count']
+
     if args.json:
         return results_helper_json(args, results, members_start_with, members_per_team)
     else:
@@ -73,7 +77,25 @@ def check_members(args, members, members_start_with):
 
     for m, start in enumerate(members_start_with):
         if start != '*':
-            assert members[m].startswith(start), "unexpected parent or kid on team"
+            print(f'{members[m]} starts with {start}')
+            assert members[m].startswith(start), "unexpected members type on team"
+
+
+def test_example():
+    args = hylat.default_args()
+    args.teamsize = 2
+
+    with open('../people.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    team_lines = results['teams'].splitlines(keepends=False)
+    team_count = len(team_lines)
+
+    assert team_count == 9
+    assert team_count == results['team_count']
+    assert results['player_count'] == 18
+    assert results['category_count'] == 2
+    assert results['drop_count'] == 0
 
 
 def test_default():
@@ -85,6 +107,107 @@ def test_default():
 
     members_start_with = [['Parent', 'Kid'] for _ in range(7)]
     members_start_with += [['Kid', 'Kid'] for _ in range(2)]
+    results_helper(args, results, members_start_with, 0)
+
+def test_default_extra():
+    args = hylat.default_args()
+    args.teamsize = 2
+
+    with open('good_testE1.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['Parent', 'Kid'] for _ in range(7)]
+    members_start_with += [['Kid', 'Extra'] for _ in range(2)]
+    members_start_with += [['Kid', 'Kid'] for _ in range(1)]
+    results_helper(args, results, members_start_with, 0)
+
+def test_extra_gen():
+    args = hylat.default_args()
+    args.teamsize = 2
+    args.generations = True
+
+    with open('good_testE1.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['Parent', 'Parent'] for _ in range(3)]
+    members_start_with += [['Parent', 'Kid'] for _ in range(1)]
+    members_start_with += [['Kid', 'Kid'] for _ in range(5)]
+    members_start_with += [['Extra', 'Extra'] for _ in range(1)]
+    results_helper(args, results, members_start_with, 0)
+
+
+def test_extra_uneven():
+    for r in ['closest', 'down']:
+        args = hylat.default_args()
+        args.teamsize = 2
+        args.uneven = True
+        args.round = r
+
+        with open('good_testE2.txt', 'r') as people:
+            results = hylat.teams_from_list(args, people.readlines())
+
+        members_start_with = [['Parent', 'Kid', 'Kid'] for _ in range(1)]
+        members_start_with += [['Parent', 'Kid'] for _ in range(6)]
+        members_start_with += [['Kid', 'Extra'] for _ in range(3)]
+        results_helper(args, results, members_start_with, 0)
+
+def test_extra_uneven_up():
+    args = hylat.default_args()
+    args.teamsize = 2
+    args.uneven = True
+    args.round = 'up'
+
+    with open('good_testE2.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['Parent', 'Kid'] for _ in range(7)]
+    members_start_with += [['Kid', 'Extra'] for _ in range(3)]
+    members_start_with += [['Kid'] for _ in range(1)]
+    results_helper(args, results, members_start_with, 0)
+
+def test_extra_big():
+    args = hylat.default_args()
+    args.teamsize = 2
+
+    with open('good_testE3.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['C1', 'C3'] for _ in range(3)]
+    members_start_with += [['C1', 'C4'] for _ in range(2)]
+    members_start_with += [['C2', 'C4'] for _ in range(3)]
+    members_start_with += [['C2', 'C5'] for _ in range(2)]
+    members_start_with += [['C3', 'C5'] for _ in range(2)]
+    results_helper(args, results, members_start_with, 0)
+
+def test_extra_big_gen():
+    args = hylat.default_args()
+    args.teamsize = 2
+    args.generations = True
+
+    with open('good_testE3.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['C1', 'C1'] for _ in range(2)]
+    members_start_with += [['C1', 'C2'] for _ in range(1)]
+    members_start_with += [['C2', 'C2'] for _ in range(2)]
+    members_start_with += [['C3', 'C3'] for _ in range(2)]
+    members_start_with += [['C3', 'C4'] for _ in range(1)]
+    members_start_with += [['C4', 'C4'] for _ in range(2)]
+    members_start_with += [['C5', 'C5'] for _ in range(2)]
+    results_helper(args, results, members_start_with, 0)
+
+
+def test_extra_big_tcount3():
+    args = hylat.default_args()
+    args.teamcount = 3
+    args.oktogether = True
+
+    with open('good_testE3.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['C1', 'C2', 'C2', 'C3', 'C3', 'C4', 'C5', 'C5'] for _ in range(1)]
+    members_start_with += [['C1', 'C1', 'C2', 'C3', 'C3', 'C4', 'C4', 'C5'] for _ in range(1)]
+    members_start_with += [['C1', 'C1', 'C2', 'C2', 'C3', 'C4', 'C4', 'C5'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 
@@ -149,8 +272,8 @@ def test_teamcount3():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Parent', 'Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
-    members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with = [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with += [['Parent', 'Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 def test_teamcount9():
@@ -172,8 +295,8 @@ def test_teamsize3():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Parent', 'Parent', 'Kid'] for _ in range(1)]
-    members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(5)]
+    members_start_with = [['Parent', 'Kid', 'Kid'] for _ in range(5)]
+    members_start_with += [['Parent', 'Parent', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 def test_teamsize6_json():
@@ -185,8 +308,8 @@ def test_teamsize6_json():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Parent', 'Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
-    members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with = [['Parent', 'Parent', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with += [['Parent', 'Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 def test_kids_only():
@@ -208,8 +331,8 @@ def test_kids_only2():
     with open('good_test4.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Kid', 'Kid', 'Kid'] for _ in range(2)]
-    members_start_with += [['Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    members_start_with = [['Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    members_start_with += [['Kid', 'Kid', 'Kid'] for _ in range(2)]
     results_helper(args, results, members_start_with, 0)
 
 def test_fail_teamsize_too_big():
@@ -254,9 +377,9 @@ def test_teamsize6_gen_oktogether_uneven():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Kid', 'Kid', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
-    members_start_with += [['Kid', 'Kid', 'Kid', 'Kid', 'Kid', 'Parent'] for _ in range(1)]
-    members_start_with += [['Parent', 'Parent', 'Parent', 'Parent', 'Parent', 'Parent'] for _ in range(1)]
+    members_start_with = [['Parent', 'Parent', 'Parent', 'Parent', 'Parent', 'Parent'] for _ in range(1)]
+    members_start_with += [['Parent', 'Kid', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    members_start_with += [['Kid', 'Kid', 'Kid', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
     args = hylat.default_args()
@@ -302,8 +425,8 @@ def test_oktogether_teamcount6():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Parent', 'Parent', 'Kid'] for _ in range(1)]
-    members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(5)]
+    members_start_with = [['Parent', 'Kid', 'Kid'] for _ in range(5)]
+    members_start_with += [['Parent', 'Parent', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 
@@ -327,9 +450,9 @@ def test_pvk():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Kid', 'Kid'] for _ in range(5)]
-    members_start_with += [['Kid', 'Parent'] for _ in range(1)]
-    members_start_with += [['Parent', 'Parent'] for _ in range(3)]
+    members_start_with = [['Parent', 'Parent'] for _ in range(3)]
+    members_start_with += [['Parent', 'Kid'] for _ in range(1)]
+    members_start_with += [['Kid', 'Kid'] for _ in range(5)]
     results_helper(args, results, members_start_with, 0)
 
 
@@ -343,9 +466,9 @@ def test_uneven1():
         with open('good_test1.txt', 'r') as people:
             results = hylat.teams_from_list(args, people.readlines())
 
-        members_start_with = [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(1)]
-        members_start_with += [['Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
+        members_start_with = [['Parent', 'Parent', 'Kid', 'Kid', 'Kid'] for _ in range(2)]
         members_start_with += [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+        members_start_with += [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(1)]
         results_helper(args, results, members_start_with, 0)
 
     args = hylat.default_args()
@@ -355,9 +478,9 @@ def test_uneven1():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with = [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    members_start_with += [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(2)]
     members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(2)]
-    members_start_with += [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 def test_uneven2():
@@ -369,9 +492,9 @@ def test_uneven2():
     with open('good_test1.txt', 'r') as people:
         results = hylat.teams_from_list(args, people.readlines())
 
-    members_start_with = [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(2)]
+    members_start_with = [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
+    members_start_with += [['Parent', 'Parent', 'Kid', 'Kid'] for _ in range(2)]
     members_start_with += [['Parent', 'Kid', 'Kid'] for _ in range(2)]
-    members_start_with += [['Parent', 'Kid', 'Kid', 'Kid'] for _ in range(1)]
     results_helper(args, results, members_start_with, 0)
 
 def test_drop():
@@ -420,7 +543,7 @@ def test_fail_noteven():
 
 
 def test_fail_input():
-    for fname in ('bad_test3.txt', 'bad_test4.txt', 'bad_test6.txt'):
+    for fname in ('bad_test4.txt', 'bad_test6.txt'):
         do_fail_input(fname)
 
 
@@ -428,11 +551,22 @@ def do_fail_input(file_name):
     args = hylat.default_args()
     args.teamsize = 2
     args.uneven = True
-    args.oktogether = True
 
     with open(file_name, 'r') as people:
         with pytest.raises(ValueError):
             results = hylat.teams_from_list(args, people.readlines())
+
+def test_test_fail():
+    args = hylat.default_args()
+    args.teamsize = 2
+
+    with open('bad_test3.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['*', '*'] for _ in range(3)]
+    # should detect family members gether on same team (see bad_test3.txt comment)
+    with pytest.raises(AssertionError):
+        results_helper(args, results, members_start_with, 2)
 
 
 def test_fail_binary():
