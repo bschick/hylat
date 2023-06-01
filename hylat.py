@@ -48,7 +48,6 @@ def teams_from_str(args, lines):
 def teams_from_list(args, lines):
 
     normalize_args(args)
-
     assert args.teamsize >= 0
     assert args.teamcount >= 0
 
@@ -101,7 +100,7 @@ def teams_from_list(args, lines):
     category_count = len(categories)
 
     if args.verbose:
-        lp(f'{people_count} people in {len(family_sizes)} families with {category_count} categories, {[len(cat) for cat in categories]} people per category')
+        lp(f'{people_count} people in {len(family_sizes)} families with {category_count} categories. {[len(cat) for cat in categories]} people per category')
 
     # common error checking
     if args.teamsize > 0 and args.teamsize > people_count:
@@ -210,7 +209,7 @@ def teams_from_list(args, lines):
 
 
     if args.verbose:
-        lp(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}, {remaining_count} people, {category_count} {"category" if category_count ==1 else "categories"}). Took {count+1} {"try" if count ==0 else "tries"}~~~~')
+        lp(f'\n~~~~ Results: {team_count} team{"s" if team_count > 1 else ""}, {remaining_count} people{" (" +str(drop_count)+ " dropped)" if args.drop else ""}, {category_count} {"category" if category_count ==1 else "categories"}. Took {count+1} {"try" if count ==0 else "tries"}~~~~')
 
     # take doesn't work with inhomogeneous shape arrays, so loop
     out_teams = []
