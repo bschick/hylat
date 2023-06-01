@@ -91,9 +91,9 @@ def test_example():
     team_lines = results['teams'].splitlines(keepends=False)
     team_count = len(team_lines)
 
-    assert team_count == 9
+    assert team_count == 10
     assert team_count == results['team_count']
-    assert results['player_count'] == 18
+    assert results['player_count'] == 20
     assert results['category_count'] == 2
     assert results['drop_count'] == 0
 

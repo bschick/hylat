@@ -1,35 +1,53 @@
-# Each line is a group of people who you want to be on different teams if possible. Each line
-# could be a family or any group of people who you want on different teams. Within each line
-# there are one or more categories of people, like parents and kids, that this tool can either
-# spread out on different teams or keep together depending the selected options. Categories
-# are separated by a colon and people within categories are comma seperated lists.
+# Create teams from a list of people. This tool was originally built to make teams from
+# families attending a school ping-pong tournament, but can be used to make teams from
+# any set of people. The simplest way to use this tool is to enter one person per line
+# and Team Generator will create random teams based on the options you select.
 #
-# Using the family example, to have families end up on different teams with parents and kids
-# spread out evenly across teams, each line would have one family with kids as the first
-# category and parents as the second. An example line with one kid and two parents
-#   Weston Peters : Ava Peters, Eric Peters
+# Sometimes you may want more control over team creation. In particular, it is common to
+# want certain people to be on different teams. With this tool you can controll that by
+# putting those people on the same line separated by commas. Team generator will ensure
+# people on the same line are put on different teams. For example, each line could 
+# represent a family whose members you want on different teams.
 #
-# The categories on each line can be empty. An example line with parents but no kids
-#   : Jack Manning, Kelly Manning
+# You can go further by adding one or more categories to each line. Categories are
+# created using colon separators, and allow you to control how people in those
+# categories are distributed across teams. For example, each family line could have
+# categories for kids and for parents that the tool will evenly distribute accoss teams
+# to avoid teams of all parents or kids.
 #
-# You may leave out the : separator as a shortcut way to make each person on a line part of
-# the first category. An example line with only kids
-#   Samantha Peake, Sister Peake
+# Using the family example, here are are a few lines with four people. Since Samantha and
+# Sister are on the same line they will be put on different teams.
+#    Samantha Peake, Sister Peake
+#    Luke
+#    James Freeman
+#
+# The next example adds categoriues with the use of a colon separator. Categories are
+# used to distinguish between kids (before the colon) and parents (after the colon) on
+# each line. People on a single line are still put on different teams and categories are
+# used to evenly distribute people of the same category across teams.
+#    Weston Peters : Ava Peters, Eric Peters
+#    Jack Rossing, Kelly Rossing, Una Rossing: Craig Manning, Sara Ross
+#    Hills Wallace: Gordon Wallace
+#
+# The categories on each line can be empty. The first line below has no kids and two
+# parents while the second line has one kid and one parent.
+#    : Felicity Allan, Bella Coleman
+#    Hills Wallace: Gordon Wallace
 #
 # Rather than famlies with parents and kids, you can use whatever categories you have.
 # For example, each line could be a school class with "TeacherList: StudentList". You can
-# also not use categories at all or have more than two. Team Generator will always try to
-# put the people on each line onto different teams and then either spread out people in the
-# same category or group them together based on the options you select.
+# also not add any categories or use more than two. Team Generator will always try to
+# put the people on each line onto different teams and then either spread out people in
+# the same category or group them together based on the options you select.
 #
 # Example families list below (names from https://homepage.net/name_generator/)
 
 Hills Wallace: Gordon Wallace
 Weston Peters: Ava Peters, Eric Peters
-Craig Manning, Sara Manning : Jack Manning
+Jack Rossing, Kelly Rossing: Craig Manning, Sara Ross
 Samantha Peake, Sister Peake
 Luke
 James Freeman
-: Felicity Allan
- Matthew Randall,Parker Randall: Olivia Randall
- Kid Gray: Parent Gray
+: Felicity Allan, Bella Coleman
+Matthew Randall,Parker Randall: Olivia Randall
+Kid Gray: Parent Gray
