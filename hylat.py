@@ -76,17 +76,22 @@ def teams_from_list(args, lines):
             fam_size = 0
             cat_strings = family.split(':')
             for cat_num, cat_string in enumerate(cat_strings):
+                # must add the category even if emppty on this line to ensure
+                # categories that follow go into the correct offset
+                if len(categories) <= cat_num:
+                    categories.append([])
                 cat_string = cat_string.strip()
                 if cat_string:
                     # iter(lambda:i, -1) is an iterator that returns i forever when i >= 0
                     tuples = list(zip([s.strip() for s in cat_string.split(',') if s.strip()], iter(lambda:i, -1), iter(lambda:cat_num, -1) ))
-                    if len(categories) <= cat_num:
-                        categories.append(tuples)
-                    else:
-                        categories[cat_num].extend(tuples)
+                    categories[cat_num].extend(tuples)
                     fam_size += len(tuples)
 
+
             family_sizes.append(fam_size)
+        #filter out empty categories (None return False for empty arrays)
+        categories = list(filter(None, categories))
+
     except ValueError as verr:
         usage_error(f'Could not read family data. {verr}')
     except Exception as ex:
@@ -205,7 +210,7 @@ def teams_from_list(args, lines):
 
 
     if args.verbose:
-        lp(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}, {remaining_count} people). Took {count+1} tries~~~~')
+        lp(f'\n~~~~ Results ({team_count} team{"s" if team_count > 1 else ""}, {remaining_count} people, {category_count} {"category" if category_count ==1 else "categories"}). Took {count+1} {"try" if count ==0 else "tries"}~~~~')
 
     # take doesn't work with inhomogeneous shape arrays, so loop
     out_teams = []
