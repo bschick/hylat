@@ -88,7 +88,7 @@ def teams_from_list(args, lines):
 
 
             family_sizes.append(fam_size)
-        #filter out empty categories (None return False for empty arrays)
+        #filter out empty categories (None returns False for empty arrays)
         categories = list(filter(None, categories))
 
     except ValueError as verr:
@@ -327,7 +327,7 @@ def dump_plan(args):
         lp(f'round number of teams {"to " + args.round if args.round == "closest" else args.round}')
 
     gen_msg = "compete" if args.generations else "spread out"
-    lp(f'generations {gen_msg}')
+    lp(f'categories {gen_msg}')
 
     if not args.oktogether and args.verbose > 1:
         lp(f'maximum of {args.tries:,} tries to create valid teams')
@@ -390,7 +390,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create teams from a file listing groups of people in different categories (like family with kids and parents)')
     parser.add_argument('family_file', type=str, help='file containing list of families')
     parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='allow familes to be on the same team')
-    parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams of the same generation (parents v kids)')
+    parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams from the same category (aka parents v kids)')
     parser.add_argument('-s', '--teamsize', required=False, default=-999, type=int, help='size of each team, must be more than 1 (default is 2)')
     parser.add_argument('-c', '--teamcount', required=False, default=-999, type=int, help='number of teams, must be more than 1')
     parser.add_argument('-t', '--tries', required=False, default=10000, type=int, help='maximum number of attempts to create valid teams (default is 10,000)')

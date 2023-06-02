@@ -455,6 +455,15 @@ def test_pvk():
     members_start_with += [['Kid', 'Kid'] for _ in range(5)]
     results_helper(args, results, members_start_with, 0)
 
+def test_1longcat():
+    args = hylat.default_args()
+    args.teamsize = 25
+
+    with open('good_test5.txt', 'r') as people:
+        results = hylat.teams_from_list(args, people.readlines())
+
+    members_start_with = [['Kid']*25 for _ in range(2)]
+    results_helper(args, results, members_start_with, 0)
 
 def test_uneven1():
     for r in ['closest', 'down']:
