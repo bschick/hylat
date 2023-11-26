@@ -388,7 +388,7 @@ def default_args():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create teams from a file listing groups of people in different categories (like family with kids and parents)')
-    parser.add_argument('family_file', type=str, help='file containing list of families')
+    parser.add_argument('family_file', type=str, nargs='?', help='file containing list of families')
     parser.add_argument('-o', '--oktogether', required=False, action='store_true', help='allow familes to be on the same team')
     parser.add_argument('-g', '--generations', required=False, action='store_true', help='try to create teams from the same category (aka parents v kids)')
     parser.add_argument('-s', '--teamsize', required=False, default=-999, type=int, help='size of each team, must be more than 1 (default is 2)')
@@ -402,19 +402,34 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose', action="count", default=0, help='display more progress information')
     args = parser.parse_args()
 
+    open_file = None
+    exit = 0
     try:
-        with open(args.family_file, 'r') as people:
-            try:
-                result = teams_from_list(args, people.readlines())
-                lp(result['teams'])
-            except UnicodeDecodeError as uerr:
-                lp(f'Could not read "{args.family_file}". Contains unreadable characters\n  hylat.py -h for help')
-                sys.exit(1)
-            except ValueError as verr:
-#                traceback.print_exc()
-                lp(f'{str(verr)}\n  hylat.py -h for help')
-                sys.exit(1)
+        if args.family_file is None:
+            people = sys.stdin
+        else:
+            open_file = open(args.family_file, 'r')
+            people = open_file
+
+        try:
+            result = teams_from_list(args, people.readlines())
+            lp(result['teams'])
+        except UnicodeDecodeError as uerr:
+            lp(f'Could not read "{args.family_file}". Contains unreadable characters\n  hylat.py -h for help')
+            exit = 1
+        except ValueError as verr:
+#            traceback.print_exc()
+            lp(f'{str(verr)}\n  hylat.py -h for help')
+            exit = 2
+        except KeyboardInterrupt as kint:
+            exit = -1
+
     except Exception as ex:
 #        traceback.print_exc()
         lp(f'Could not open or load "{args.family_file}". {ex}')
-        sys.exit(2)
+        exit = 3
+    finally:
+        if open_file is not None:
+            open_file.close()
+
+    sys.exit(exit)
