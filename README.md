@@ -8,7 +8,7 @@ Required components:
 * edit the example 'people.txt' file or create a new file
 * run hylat
 
-Example usage:
+Example usage (see comments in people.txt file for help):
 ```
 % ./hylat.py --size 3 -v people.txt
 ~~~~ Plan ~~~~
@@ -30,25 +30,34 @@ Jack Manning - Weston Peters - Matthew Randall
 
 Script usage:
 ```
-usage: hylat.py [-h] [-o] [-g] [-s SIZE] [-t TRIES] [-i] [-v] [-j] [-p SEPARATOR] family_file
+usage: hylat.py [-h] [-o] [-g] [-s TEAMSIZE] [-c TEAMCOUNT] [-t TRIES] [-d] [-u] [-j]
+                [-r {closest,down,up}] [-p SEPARATOR] [-v]
+                [family_file]
 
-Create teams from a file listing families of parents and kids (or other people groupings)
+Create teams from a file listing groups of people in different categories (like family with kids and parents)
 
 positional arguments:
   family_file           file containing list of families
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -o, --oktogether      do not force family members to be on different teams
-  -g, --generations     try to create teams of the same generation (parents v kids)
-  -s SIZE, --size SIZE  team size (default is 2)
+  -o, --oktogether      allow familes to be on the same team
+  -g, --generations     try to create teams from the same category (aka parents v kids)
+  -s TEAMSIZE, --teamsize TEAMSIZE
+                        size of each team, must be more than 1 (default is 2)
+  -c TEAMCOUNT, --teamcount TEAMCOUNT
+                        number of teams, must be more than 1
   -t TRIES, --tries TRIES
                         maximum number of attempts to create valid teams (default is 10,000)
-  -i, --inexact         try to match team size, but allow smaller or uneven team sizes
-  -v, --verbose         display more progress information
+  -d, --drop            drop random extra people if teams are not even
+  -u, --uneven          try to match team size, but allow uneven team sizes
   -j, --json            output in json
+  -r {closest,down,up}, --round {closest,down,up}
+                        used with --uneven and --teamsize to round resulting number of teams down, up, or to closest even
+                        number (default is 'closest')
   -p SEPARATOR, --separator SEPARATOR
                         separator between team members in printout (default is ' - ')
+  -v, --verbose         display more progress information
 ```
 
 THE SOFTWARE AND INSTRUCTIONS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

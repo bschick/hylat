@@ -21,10 +21,11 @@
 #    Luke
 #    James Freeman
 #
-# The next example adds categoriues with the use of a colon separator. Categories are
-# used to distinguish between kids (before the colon) and parents (after the colon) on
-# each line. People on a single line are still put on different teams and categories are
-# used to evenly distribute people of the same category across teams.
+# The next example adds categories with the use of a colon separator. Categories can
+# represent anything, and in the example are used to distinguish between kids (before the
+# colon) and parents (after the colon) on each line. All of the people on a single line
+# are still put on different teams if possible. In addtion, teams will have a balanced 
+# mix of people from each category to prevent teams of all parents or all kids.
 #    Weston Peters : Ava Peters, Eric Peters
 #    Jack Rossing, Kelly Rossing, Una Rossing: Craig Manning, Sara Ross
 #    Hills Wallace: Gordon Wallace
