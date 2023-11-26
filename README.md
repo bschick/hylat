@@ -30,8 +30,9 @@ Jack Manning - Weston Peters - Matthew Randall
 
 Script usage:
 ```
-usage: hylat.py [-h] [-o] [-g] [-s TEAMSIZE] [-c TEAMCOUNT] [-t TRIES] [-d] [-u] [-j] [-r {closest,down,up}] [-p SEPARATOR]
-                [-v] family_file
+usage: hylat.py [-h] [-o] [-g] [-s TEAMSIZE] [-c TEAMCOUNT] [-t TRIES] [-d] [-u] [-j]
+                [-r {closest,down,up}] [-p SEPARATOR] [-v]
+                [family_file]
 
 Create teams from a file listing groups of people in different categories (like family with kids and parents)
 
