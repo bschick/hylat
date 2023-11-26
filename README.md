@@ -8,7 +8,7 @@ Required components:
 * edit the example 'people.txt' file or create a new file
 * run hylat
 
-Example usage:
+Example usage (see comments in people.txt file for help):
 ```
 % ./hylat.py --size 3 -v people.txt
 ~~~~ Plan ~~~~
